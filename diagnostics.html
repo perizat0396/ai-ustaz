@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Диагностика AI генерации</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .results {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .model-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .model-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .model-card.working {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .model-card.error {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .model-card.warning {
+            border-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .model-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status-badge.success {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-badge.error {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-badge.warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .model-details {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .response-time {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .recommendation {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .recommendation.error {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-details {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #856404;
+        }
+
+        h2 {
+            color: #667eea;
+            margin: 30px 0 15px;
+            font-size: 1.8em;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Диагностика AI генерации</h1>
+            <p>Проверка работоспособности Gemini API и моделей</p>
+            <button class="btn" id="runTest" onclick="runDiagnostics()">
+                🚀 Запустить диагностику
+            </button>
+        </div>
+
+        <div class="results" id="results">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Тестирование моделей... Это может занять до минуты.</p>
+            </div>
+            <div id="resultsContent" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        async function runDiagnostics() {
+            const btn = document.getElementById('runTest');
+            const results = document.getElementById('results');
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('resultsContent');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Тестирование...';
+            results.classList.add('show');
+            loading.style.display = 'block';
+            content.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/diagnostics');
+                const data = await response.json();
+
+                displayResults(data);
+            } catch (error) {
+                content.innerHTML = `
+                    <div class="status-card" style="border-color: #dc3545;">
+                        <h2 style="color: #dc3545;">❌ Ошибка подключения</h2>
+                        <p>${error.message}</p>
+                        <div class="info-box">
+                            Убедитесь, что сервер запущен на порту 8000
+                        </div>
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = '🔄 Запустить заново';
+            }
+        }
+
+        function displayResults(data) {
+            const content = document.getElementById('resultsContent');
+            
+            let html = '';
+
+            // API ключ статус
+            html += `
+                <div class="status-card">
+                    <h3>${data.api_key_present ? '✅' : '❌'} API ключ</h3>
+                    <p>${data.api_key_present ? 
+                        `Найден (длина: ${data.api_key_length} символов)` : 
+                        'Не найден в .env файле'}</p>
+                </div>
+            `;
+
+            // Результаты тестирования моделей
+            html += '<h2>📊 Результаты тестирования моделей</h2>';
+            
+            data.models_tested.forEach(model => {
+                const isWorking = model.status.includes('✅');
+                const isError = model.status.includes('❌');
+                const cardClass = isWorking ? 'working' : (isError ? 'error' : 'warning');
+                const badgeClass = isWorking ? 'success' : (isError ? 'error' : 'warning');
+
+                html += `
+                    <div class="model-card ${cardClass}">
+                        <div class="model-header">
+                            <div class="model-name">${model.model}</div>
+                            <div class="status-badge ${badgeClass}">${model.status}</div>
+                        </div>
+                        <div class="model-details">
+                            ${model.response_time ? `<div class="response-time">⏱️ ${model.response_time}s</div>` : ''}
+                            ${model.response ? `<p style="margin-top: 10px;"><strong>Ответ:</strong> ${model.response}</p>` : ''}
+                            ${model.error ? `<div class="error-details">⚠️ ${model.error}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Рекомендация
+            if (data.recommendation) {
+                const recClass = data.success ? '' : 'error';
+                html += `
+                    <div class="recommendation ${recClass}">
+                        ${data.recommendation}
+                    </div>
+                `;
+            }
+
+            // Дополнительная информация
+            html += `
+                <div class="info-box" style="margin-top: 30px;">
+                    <h3>💡 Что делать дальше?</h3>
+                    ${data.working_models.length > 0 ? `
+                        <p><strong>1.</strong> Используйте одну из рабочих моделей в вашем коде</p>
+                        <p><strong>2.</strong> Обновите строку 43 в flashcards.py:</p>
+                        <code style="background: #f5f5f5; padding: 10px; display: block; margin: 10px 0; border-radius: 5px;">
+                            GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/${data.working_models[0]}:generateContent"
+                        </code>
+                    ` : `
+                        <p><strong>1.</strong> Проверьте API ключ в файле .env</p>
+                        <p><strong>2.</strong> Убедитесь, что у вас есть квота в Google AI Studio</p>
+                        <p><strong>3.</strong> Проверьте подключение к интернету</p>
+                        <p><strong>4.</strong> Попробуйте создать новый API ключ: <a href="https://aistudio.google.com/app/apikey" target="_blank">https://aistudio.google.com/app/apikey</a></p>
+                    `}
+                </div>
+            `;
+
+            content.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

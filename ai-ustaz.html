@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ai-Ustaz - Білім беру платформасы</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Shapes */
+        .bg-shapes {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.05;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(135deg, #3559D5, #6B8FFF);
+            top: -200px;
+            right: -150px;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #3559D5, #8FA9FF);
+            bottom: -150px;
+            left: -100px;
+            animation-delay: 3s;
+        }
+
+        .shape-3 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #6B8FFF, #3559D5);
+            top: 50%;
+            left: 50%;
+            animation-delay: 6s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
+        /* AI Neural Network Background */
+        .ai-network {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        .ai-node {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #3559D5;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(53, 89, 213, 0.5);
+            animation: pulse-node 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse-node {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            50% { 
+                transform: scale(1.5);
+                opacity: 1;
+            }
+        }
+
+        .ai-connection {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #3559D5, transparent);
+            transform-origin: left center;
+            animation: data-flow 3s infinite linear;
+        }
+
+        @keyframes data-flow {
+            0% {
+                opacity: 0;
+                transform: scaleX(0);
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 0;
+                transform: scaleX(1);
+            }
+        }
+
+        /* AI Particles */
+        .ai-particles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #3559D5;
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: float-particle 15s infinite ease-in-out;
+        }
+
+        @keyframes float-particle {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+
+         .main-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3559D5 0%, #5B7FE8 50%, #667eea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            margin-bottom: 0;
+            text-align: center;
+        }
+
+        /* AI Badge on Logo */
+         .ai-sana-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(53, 89, 213, 0.1), rgba(91, 127, 232, 0.1));
+            border: 2px solid rgba(53, 89, 213, 0.2);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #3559D5;
+            transition: all 0.3s ease;
+            cursor: default;
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-sana-badge:hover {
+            background: linear-gradient(135deg, rgba(53, 89, 213, 0.15), rgba(91, 127, 232, 0.15));
+            border-color: rgba(53, 89, 213, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(53, 89, 213, 0.15);
+        }
+
+        .ai-sana-badge i {
+            font-size: 1.2rem;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% {
+                box-shadow: 0 4px 15px rgba(53, 89, 213, 0.4);
+            }
+            50% {
+                box-shadow: 0 4px 25px rgba(53, 89, 213, 0.8);
+            }
+        }
+
+        
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Header Styles */
+        .header {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(53, 89, 213, 0.1);
+            padding: 20px 0;
+            box-shadow: 0 2px 20px rgba(53, 89, 213, 0.05);
+        }
+
+        .header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo-img {
+            height: 80px;
+            width: auto;
+            filter: drop-shadow(0 4px 8px rgba(53, 89, 213, 0.2));
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 6px;
+            background: rgba(53, 89, 213, 0.08);
+            padding: 6px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .lang-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, #3559D5, #5B7FE8);
+            color: white;
+            box-shadow: 0 4px 12px rgba(53, 89, 213, 0.3);
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: rgba(53, 89, 213, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .library-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3559D5, #5B7FE8);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            box-shadow: 0 4px 15px rgba(53, 89, 213, 0.25);
+        }
+
+        .library-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(53, 89, 213, 0.35);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            position: relative;
+            padding: 100px 20px 20px 20px;
+            z-index: 1;
+        }
+
+        /* Hero Section */
+        header {
+            text-align: center;
+            margin-bottom: 80px;
+            padding-top: 80px;
+            position: relative;
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 5rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #3559D5 0%, #6B8FFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 5px;
+            background: linear-gradient(90deg, transparent, #3559D5, transparent);
+            border-radius: 10px;
+            animation: line-glow 2s infinite ease-in-out;
+        }
+
+        @keyframes line-glow {
+            0%, 100% {
+                box-shadow: 0 0 5px rgba(53, 89, 213, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 15px rgba(53, 89, 213, 0.8);
+            }
+        }
+
+        .slogan {
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: #475569;
+            letter-spacing: 0.3px;
+            max-width: 750px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .slogan span {
+            color: #3559D5;
+            font-weight: 700;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 28px;
+            padding: 20px;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 32px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(53, 89, 213, 0.08);
+            border: 2px solid transparent;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(53, 89, 213, 0.05), rgba(107, 143, 255, 0.05));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(53, 89, 213, 0.2);
+            border-color: #3559D5;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 28px;
+            background: linear-gradient(135deg, #3559D5 0%, #6B8FFF 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(53, 89, 213, 0.3);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .icon::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #6B8FFF, #3559D5);
+            border-radius: 24px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        /* AI Brain Circuit Pattern on Icon */
+        .icon::after {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background-image: 
+                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 10px 10px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            animation: circuit-flow 2s infinite linear;
+        }
+
+        @keyframes circuit-flow {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(10px, 10px); }
+        }
+
+        .card:hover .icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 15px 40px rgba(53, 89, 213, 0.5);
+        }
+
+        .card:hover .icon::before {
+            opacity: 1;
+        }
+
+        .card:hover .icon::after {
+            opacity: 0.3;
+        }
+
+        /* AI Sparkles */
+        .ai-sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: sparkle 2s infinite ease-in-out;
+        }
+
+        .ai-sparkle:nth-child(1) { top: 20%; left: 20%; animation-delay: 0s; }
+        .ai-sparkle:nth-child(2) { top: 30%; right: 25%; animation-delay: 0.3s; }
+        .ai-sparkle:nth-child(3) { bottom: 25%; left: 30%; animation-delay: 0.6s; }
+        .ai-sparkle:nth-child(4) { bottom: 30%; right: 20%; animation-delay: 0.9s; }
+
+        @keyframes sparkle {
+            0%, 100% { 
+                opacity: 0;
+                transform: scale(0);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .icon svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .card-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.35rem;
+            color: #1e293b;
+            margin-bottom: 14px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-description {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Chat Widget Styles */
+        #chat-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 10001;
+        }
+
+        #chat-button {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3559D5, #6B8FFF);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(53, 89, 213, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        #chat-button::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(135deg, #3559D5, #6B8FFF);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0; }
+        }
+
+        #chat-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(53, 89, 213, 0.5);
+        }
+
+        #chat-button i {
+            font-size: 28px;
+            color: white;
+        }
+
+        #chat-container {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 380px;
+            height: 540px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(53, 89, 213, 0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10000;
+            border: 2px solid rgba(53, 89, 213, 0.1);
+        }
+
+        #chat-container.active {
+            display: flex;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #chat-header {
+            padding: 28px 25px;
+            background: linear-gradient(135deg, #3559D5, #6B8FFF);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #chat-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        #chat-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        #chat-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px 25px;
+            background: #f8faff;
+        }
+
+        .chat-message {
+            margin-bottom: 24px;
+            display: flex;
+            gap: 14px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(53, 89, 213, 0.2);
+        }
+
+        .message-avatar.bot {
+            background: linear-gradient(135deg, #3559D5, #6B8FFF);
+            color: white;
+        }
+
+        .message-avatar.user {
+            background: linear-gradient(135deg, #64748b, #94a3b8);
+            color: white;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 18px 22px;
+            border-radius: 16px;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .message-content.bot {
+            background: white;
+            color: #334155;
+            box-shadow: 0 4px 12px rgba(53, 89, 213, 0.08);
+            border: 1px solid rgba(53, 89, 213, 0.1);
+        }
+
+        .message-content.user {
+            background: linear-gradient(135deg, #3559D5, #5B7FE8);
+            color: white;
+            margin-left: auto;
+            box-shadow: 0 4px 12px rgba(53, 89, 213, 0.25);
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+
+        #chat-input-container {
+            padding: 24px;
+            background: white;
+            border-top: 2px solid rgba(53, 89, 213, 0.1);
+            display: flex;
+            gap: 14px;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid rgba(53, 89, 213, 0.2);
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #chat-input:focus {
+            border-color: #3559D5;
+            box-shadow: 0 0 0 4px rgba(53, 89, 213, 0.1);
+        }
+
+        #chat-send {
+            padding: 16px 22px;
+            background: linear-gradient(135deg, #3559D5, #6B8FFF);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(53, 89, 213, 0.3);
+        }
+
+        #chat-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(53, 89, 213, 0.4);
+        }
+
+        #chat-send i {
+            font-size: 18px;
+        }
+
+          /* Подзаголовок */
+        .subtitle {
+            font-size: 1.2rem;
+            color: #4a5568;
+            text-align: center;
+            margin: 25px 0 50px;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        .subtitle-accent {
+            font-weight: 600;
+            color: #3559D5;
+        }
+
+        /* Responsive Design */
+        /* Планшеты (средние экраны) */
+        @media (max-width: 1200px) {
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 24px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 22px;
+            }
+        }
+
+        /* Мобильные устройства */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2.8rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+                padding: 0 15px;
+                margin: 20px 0 40px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .card {
+                padding: 35px 28px;
+            }
+            
+            .icon {
+                width: 70px;
+                height: 70px;
+                margin-bottom: 22px;
+            }
+            
+            .icon svg {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .card-title {
+                font-size: 1.2rem;
+            }
+            
+            .card-description {
+                font-size: 0.9rem;
+            }
+
+            #chat-container {
+                width: calc(100% - 40px);
+                height: 480px;
+                right: 20px;
+                left: 20px;
+                bottom: 90px;
+            }
+
+            #chat-widget {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            #chat-button {
+                width: 60px;
+                height: 60px;
+            }
+
+            #chat-button i {
+                font-size: 24px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-dots::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        /* Scrollbar Styles */
+        #chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-messages::-webkit-scrollbar-track {
+            background: rgba(53, 89, 213, 0.05);
+            border-radius: 10px;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3559D5, #6B8FFF);
+            border-radius: 10px;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2a47b0, #5B7FE8);
+        }
+
+        /* Footer Styles */
+        .footer {
+            text-align: center;
+            color: #718096;
+            margin-top: 80px;
+            padding: 30px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .accent-line {
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #3559D5, #5B7FE8);
+            margin: 25px auto;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Shapes -->
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- AI Neural Network Background -->
+    <div class="ai-network" id="ai-network"></div>
+
+    <!-- AI Particles -->
+    <div class="ai-particles" id="ai-particles"></div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <img src="/static/images/logo.svg" alt="Ai-Ustaz Logo" class="logo-img" onerror="this.style.display='none'">
+            <!--h2 style="font-size: 20px; font-family: 'Nunito'">AMANZHOLOV <br> UNIVERSITY</h2-->
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div class="lang-switcher">
+                    <button class="lang-btn active" data-lang="kk">ҚАЗ</button>
+                    <button class="lang-btn" data-lang="ru">РУС</button>
+                </div>
+                <button class="library-btn" onclick="window.location.href='library.html'">
+                    <i class="fas fa-book"></i>
+                    <span data-i18n="library">Кітапхана</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-section">
+        <div class="container">
+            <!-- Заголовок и бейдж -->
+            <div class="fade-in">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <h1 class="main-title">Ai-Ustaz</h1>
+                    <div class="ai-sana-badge">
+                        <span>AI-SANA</span>
+                    </div>
+                </div>
+             <!-- Подзаголовок -->
+            <div class="fade-in-delay-1">
+                <p class="subtitle" id="subtitle">
+                    <span class="subtitle-accent" id="subtitle-accent" data-i18n="subtitle-accent">Жасанды интеллектпен</span> 
+                    <span id="subtitle-text" data-i18n="subtitle-text">оқу материалдарын жасауға арналған платформа</span>
+                </p>
+            </div>
+
+        </header>
+
+        <div class="cards-grid" id="mainMenu">
+            <!-- Карточка 1: Флеш-карты -->
+            <div class="card" data-page="flashcards">
+                <div class="icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H6v-2h6v2zm3-4H6v-2h9v2zm0-4H6V7h9v2z"/>
+                    </svg>
+                </div>
+                <h2 class="card-title" data-i18n="flashcards">Флеш-карты</h2>
+                <p class="card-description" data-i18n="flashcards-desc">Создайте интерактивные карточки для запоминания материала</p>
+            </div>
+
+            <!-- Карточка 2: Тестовые задания -->
+            <div class="card" data-page="quiz">
+                <div class="icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                    </svg>
+                </div>
+                <h2 class="card-title" data-i18n="quiz">Тестовые задания</h2>
+                <p class="card-description" data-i18n="quiz-desc">Сгенерируйте тесты с автоматической проверкой ответов</p>
+            </div>
+
+            <!-- Карточка 3: Генератор заданий -->
+            <div class="card" data-page="assignments">
+                <div class="icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                    </svg>
+                </div>
+                <h2 class="card-title" data-i18n="assignments">Генератор заданий</h2>
+                <p class="card-description" data-i18n="assignments-desc">ИИ за несколько секунд создает практические и лабораторные задания по любой теме</p>
+            </div>
+
+            <!-- Карточка 4: Учебный план урока -->
+            <div class="card" data-page="lesson-plan">
+                <div class="icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                </div>
+                <h2 class="card-title" data-i18n="lesson-plan">Учебный план урока</h2>
+                <p class="card-description" data-i18n="lesson-plan-desc">Структурированные планы уроков с целями и этапами</p>
+            </div>
+
+            <!-- Карточка 5: Электронный курс -->
+            <div class="card" data-page="course">
+                <div class="icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                    </svg>
+                </div>
+                <h2 class="card-title" data-i18n="course">Электронный курс</h2>
+                <p class="card-description" data-i18n="course-desc">Создайте полноценные онлайн-курсы с модулями</p>
+            </div>
+
+            <!-- Карточка 6: Интерактивные презентации -->
+            <div class="card" data-page="presentations">
+                <div class="icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2 2v20l4-4h16V2H2zm17 13H6l-2 2V4h15v11z"/>
+                    </svg>
+                </div>
+                <h2 class="card-title" data-i18n="presentations">Интерактивные презентации</h2>
+                <p class="card-description" data-i18n="presentations-desc">«Создайте динамические слайды с ИИ-помощником</p>
+            </div>
+
+            <!-- Карточка 7: Проверка работ -->
+            <div class="card" data-page="grading">
+                <div class="icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <h2 class="card-title" data-i18n="grading">Проверка работ</h2>
+                <p class="card-description" data-i18n="grading-desc">Автоматическая проверка заданий с обратной связью от ИИ</p>
+            </div>
+
+            <!-- Карточка 8: Геймификация -->
+            <div class="card" data-page="gamification">
+                <div class="icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z"/>
+                    </svg>
+                </div>
+                <h2 class="card-title" data-i18n="gamification">Геймификация</h2>
+                <p class="card-description" data-i18n="gamification-desc">Создавайте образовательные игры и квесты</p>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2025 Amanzholov University. <span data-i18n="footer"> Все права защищены</span></p>
+        </footer>
+    </div>
+
+    <!-- AI Chat Widget -->
+    <div id="chat-widget">
+        <button id="chat-button" onclick="toggleChat()">
+            <i class="fas fa-comments"></i>
+        </button>
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-header">
+            <span id="chat-title">AI Көмекші</span>
+            <button id="chat-close" onclick="closeChat()">×</button>
+        </div>
+        <div id="chat-messages">
+            <div class="chat-message bot">
+                <div class="message-avatar bot">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content bot" id="welcome-message">
+                    Сәлем! Мен Ai-Ustaz AI көмекшісімін 🤖<br><br>
+                    Мен сізге көмектесе аламын:<br>
+                    • Оқу материалдарын жасау<br>
+                    • Тесттер мен тапсырмаларды генерациялау<br>
+                    • Оқыту бойынша кеңестер<br>
+                    • Платформаны пайдалану<br>
+                    • Кез келген білім беру мәселелері<br><br>
+                    Кез келген сұрақ қойыңыз!
+                </div>
+            </div>
+        </div>
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Хабарламаны енгізіңіз...">
+            <button id="chat-send" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Generate AI Neural Network
+        function generateNeuralNetwork() {
+            const network = document.getElementById('ai-network');
+            const nodeCount = 20;
+            const nodes = [];
+            
+            // Create nodes
+            for (let i = 0; i < nodeCount; i++) {
+                const node = document.createElement('div');
+                node.className = 'ai-node';
+                node.style.left = Math.random() * 100 + '%';
+                node.style.top = Math.random() * 100 + '%';
+                node.style.animationDelay = Math.random() * 3 + 's';
+                network.appendChild(node);
+                nodes.push({
+                    element: node,
+                    x: parseFloat(node.style.left),
+                    y: parseFloat(node.style.top)
+                });
+            }
+            
+            // Create connections between nearby nodes
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[j].x - nodes[i].x;
+                    const dy = nodes[j].y - nodes[i].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 30) {
+                        const connection = document.createElement('div');
+                        connection.className = 'ai-connection';
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        connection.style.left = nodes[i].x + '%';
+                        connection.style.top = nodes[i].y + '%';
+                        connection.style.width = distance + '%';
+                        connection.style.transform = `rotate(${angle}deg)`;
+                        connection.style.animationDelay = Math.random() * 3 + 's';
+                        network.appendChild(connection);
+                    }
+                }
+            }
+        }
+        
+        // Generate AI Particles
+        function generateParticles() {
+            const particlesContainer = document.getElementById('ai-particles');
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.bottom = '-10px';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Initialize AI elements
+        document.addEventListener('DOMContentLoaded', function() {
+            generateNeuralNetwork();
+            generateParticles();
+        });
+
+        // Translations
+        const translations = {
+            kk: {
+                library: 'Кітапхана',
+                slogan: '<span>Жасанды интеллектпен</span> оқу материалдарын жасауға арналған білім беру платформасы',
+                flashcards: 'Флэш-карталар',
+                'flashcards-desc': 'Материалды есте сақтау үшін интерактивті карталарды жасаңыз',
+                quiz: 'Тест тапсырмалары',
+                'quiz-desc': 'Жауаптарды автоматты түрде тексеретін тесттер жасаңыз',
+                assignments: 'Тапсырмалар генераторы',
+                'assignments-desc': 'AI кез келген тақырып бойынша практикалық және зертханалық тапсырмаларды бірнеше секундта жасайды',
+                'lesson-plan': 'Сабақ жоспары',
+                'lesson-plan-desc': 'Мақсаттары мен кезеңдері бар құрылымдық сабақ жоспарлары',
+                course: 'Электрондық курс',
+                'course-desc': 'Модульдері бар толық онлайн курстар жасаңыз',
+                presentations: 'Интерактивті презентациялар',
+                'presentations-desc': 'AI көмекшісімен динамикалық слайдтар жасаңыз',
+                grading: 'Жұмыстарды тексеру',
+                'grading-desc': 'AI кері байланысы бар тапсырмаларды автоматты тексеру',
+                gamification: 'Ойындар',
+                'gamification-desc': 'Оқыту ойындары мен квесттер жасаңыз',
+                'subtitle-accent': 'Жасанды интеллектпен',
+                'subtitle-text': 'оқу материалдарын жасауға арналған платформа',
+                footer: 'Барлық құқықтар қорғалған',
+                chatTitle: 'AI Көмекші',
+                inputPlaceholder: 'Хабарламаны енгізіңіз...',
+                welcomeMessage: 'Сәлем! Мен Ai-Ustaz AI көмекшісімін 🤖<br><br>Мен сізге көмектесе аламын:<br>• Оқу материалдарын жасау<br>• Тесттер мен тапсырмаларды генерациялау<br>• Оқыту бойынша кеңестер<br>• Платформаны пайдалану<br>• Кез келген білім беру мәселелері<br><br>Кез келген сұрақ қойыңыз!'
+            },
+            ru: {
+                library: 'Библиотека',
+                slogan: 'Образовательная платформа с <span>искусственным интеллектом</span> для создания учебных материалов',
+                flashcards: 'Флеш-карты',
+                'flashcards-desc': 'Создайте интерактивные карточки для запоминания материала',
+                quiz: 'Тестовые задания',
+                'quiz-desc': 'Сгенерируйте тесты с автоматической проверкой ответов',
+                assignments: 'Генератор заданий',
+                'assignments-desc': 'ИИ за несколько секунд создает практические и лабораторные задания по любой теме',
+                'lesson-plan': 'Учебный план урока',
+                'lesson-plan-desc': 'Структурированные планы уроков с целями и этапами',
+                course: 'Электронный курс',
+                'course-desc': 'Создайте полноценные онлайн-курсы с модулями',
+                presentations: 'Интерактивные презентации',
+                'presentations-desc': 'Создайте динамические слайды с ИИ-помощником',
+                grading: 'Проверка работ',
+                'grading-desc': 'Автоматическая проверка заданий с обратной связью от ИИ',
+                gamification: 'Геймификация',
+                'gamification-desc': 'Создавайте образовательные игры и квесты',
+                'subtitle-text': 'Платформа для создания учебных материалов',
+                'subtitle-accent': 'с искусственным интеллектом',
+                footer: 'Все права защищены.',
+                chatTitle: 'AI Помощник',
+                inputPlaceholder: 'Введите сообщение...',
+                welcomeMessage: 'Сәлем! Мен Ai-Ustaz AI көмекшісімін 🤖<br><br>Мен мына жағдайларда көмектесе аламын:<br>• Оқу материалдарын жасау<br>• Тесттер мен тапсырмаларды генерациялау<br>• Оқыту бойынша кеңестер<br>• Платформаны пайдалану<br>• Кез келген білім беру мәселелері<br><br>Кез келген сұрақ қойыңыз!'
+            }
+        };
+
+        let currentLang = 'kk';
+        let isChatOpen = false;
+
+        // Language Switching
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLang = btn.dataset.lang;
+                updateLanguage();
+            });
+        });
+
+        function updateLanguage() {
+            const lang = translations[currentLang];
+            
+            // Обновляем все элементы с атрибутом data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (lang[key]) {
+                    if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                        element.placeholder = lang[key];
+                    } else {
+                        element.innerHTML = lang[key];
+                    }
+                }
+            });
+            
+            // Обновляем порядок слов в subtitle в зависимости от языка
+            const subtitleContainer = document.getElementById('subtitle');
+            const accentSpan = document.getElementById('subtitle-accent');
+            const textSpan = document.getElementById('subtitle-text');
+            
+            if (currentLang === 'ru') {
+                // Для русского: сначала текст, потом акцент
+                subtitleContainer.innerHTML = '';
+                subtitleContainer.appendChild(textSpan);
+                subtitleContainer.appendChild(document.createTextNode(' '));
+                subtitleContainer.appendChild(accentSpan);
+            } else {
+                // Для казахского: сначала акцент, потом текст
+                subtitleContainer.innerHTML = '';
+                subtitleContainer.appendChild(accentSpan);
+                subtitleContainer.appendChild(document.createTextNode(' '));
+                subtitleContainer.appendChild(textSpan);
+            }
+            
+            // Обновляем заголовок чата
+            document.getElementById('chat-title').textContent = lang.chatTitle;
+            
+            // Обновляем placeholder поля ввода
+            document.getElementById('chat-input').placeholder = lang.inputPlaceholder;
+            
+            // Обновляем приветственное сообщение
+            document.getElementById('welcome-message').innerHTML = lang.welcomeMessage;
+        }
+
+        // Chat Functions
+        function toggleChat() {
+            if (isChatOpen) {
+                closeChat();
+            } else {
+                openChat();
+            }
+        }
+
+        function openChat() {
+            document.getElementById('chat-container').classList.add('active');
+            isChatOpen = true;
+            setTimeout(() => {
+                document.getElementById('chat-input').focus();
+            }, 100);
+        }
+
+        function closeChat() {
+            document.getElementById('chat-container').classList.remove('active');
+            isChatOpen = false;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                addUserMessage(message);
+                input.value = '';
+                
+                // Simulate AI response
+                setTimeout(() => {
+                    const responses = currentLang === 'kk' ? [
+                        'Мен сізге көмектесе аламын! Қандай тапсырма бойынша көмек керек?',
+                        'Жақсы сұрақ! Мен бұл туралы көбірек айта аламын.',
+                        'Білім беру саласындағы AI әлі де дамып келеді. Не білгіңіз келеді?'
+                    ] : [
+                        'Я могу вам помочь! Какая именно помощь нужна?',
+                        'Хороший вопрос! Я могу рассказать об этом подробнее.',
+                        'AI в образовании продолжает развиваться. Что хотите узнать?'
+                    ];
+                    addBotMessage(responses[Math.floor(Math.random() * responses.length)]);
+                }, 1000);
+            }
+        }
+
+        function addUserMessage(text) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message user';
+            messageDiv.innerHTML = `
+                <div class="message-avatar user">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="message-content user">${text}</div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addBotMessage(text) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message bot';
+            messageDiv.innerHTML = `
+                <div class="message-avatar bot">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content bot">${text}</div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Enter key to send
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('chat-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+
+        // Close chat when clicking outside
+        document.addEventListener('click', function(event) {
+            const chatContainer = document.getElementById('chat-container');
+            const chatButton = document.getElementById('chat-button');
+            
+            if (isChatOpen && 
+                !chatContainer.contains(event.target) && 
+                !chatButton.contains(event.target)) {
+                closeChat();
+            }
+        });
+
+        // Функции для открытия страниц
+        function openFlashcards() {
+            window.location.href = 'flashcards-page.html?lang=' + currentLang;
+        }
+
+        function openQuizGenerator() {
+            window.location.href = 'quiz-generator.html?lang=' + currentLang;
+        }
+
+        function openElectronicCourse() {
+            window.location.href = 'course.html?lang=' + currentLang;
+        }
+
+        function openAssignmentsGenerator() {
+            window.location.href = 'assignments-generator.html?lang=' + currentLang;
+        }
+
+        function openLessonPlan() {
+            window.location.href = 'syllabus.html?lang=' + currentLang;
+        }
+
+        // Функции для новых модулей (пока заглушки)
+        function openPresentations() {
+            window.location.href = 'presentations-page.html?lang=' + currentLang;
+        }
+
+        function openGrading() {
+            alert('Функция "Проверка работ" в разработке');
+        }
+
+        function openGamification() {
+            alert('Функция "Геймификация" в разработке');
+        }
+
+        // Initialize language on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLanguage();
+            
+            // Добавляем обработчики для всех карточек используя data-page атрибуты
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card) => {
+                const page = card.getAttribute('data-page');
+                
+                if (!page) return; // Пропускаем карточки без data-page
+                
+                card.addEventListener('click', function() {
+                    console.log('Card clicked:', page);
+                    
+                    switch(page) {
+                        case 'flashcards':
+                            openFlashcards();
+                            break;
+                        case 'quiz':
+                            openQuizGenerator();
+                            break;
+                        case 'assignments':
+                            openAssignmentsGenerator();
+                            break;
+                        case 'lesson-plan':
+                            openLessonPlan();
+                            break;
+                        case 'course':
+                            openElectronicCourse();
+                            break;
+                        case 'presentations':
+                            openPresentations();
+                            break;
+                        case 'grading':
+                            openGrading();
+                            break;
+                        case 'gamification':
+                            openGamification();
+                            break;
+                        default:
+                            console.warn('Unknown page:', page);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

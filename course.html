@@ -1,0 +1,3488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ai-Ustaz - Электронный курс</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Nunito Sans';
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Темная тема */
+        body.dark-theme {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: #e2e8f0;
+        }
+        
+        body.dark-theme .glass-card {
+            background: rgba(45, 55, 72, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        body.dark-theme .theory-section {
+            background: linear-gradient(135deg, #2d3748 0%, #374151 100%);
+            border-left-color: #4c6ef5;
+        }
+        
+        body.dark-theme .info-box {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d4a7c 100%);
+            border-left-color: #60a5fa;
+        }
+        
+        body.dark-theme .warning-box {
+            background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+            border-left-color: #fbbf24;
+        }
+        
+        body.dark-theme .success-box {
+            background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+            border-left-color: #34d399;
+        }
+        
+        body.dark-theme .example-box {
+            background: #374151;
+            border-color: #4b5563;
+        }
+        
+        body.dark-theme p,
+        body.dark-theme h1,
+        body.dark-theme h2,
+        body.dark-theme h3 {
+            color: #e2e8f0;
+        }
+        
+        body.dark-theme .theory-title {
+            color: #f3f4f6;
+        }
+        
+        body.dark-theme .btn-secondary {
+            background: rgba(55, 65, 81, 0.9);
+            color: #e2e8f0;
+            border-color: #4b5563;
+        }
+        
+        body.dark-theme .code-block {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        
+        /* Декоративные фоновые круги */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.08;
+            z-index: 0;
+        }
+
+        body::before {
+            width: 500px;
+            height: 500px;
+            background: #3559D5;
+            top: -150px;
+            right: -100px;
+        }
+
+        body::after {
+            width: 350px;
+            height: 350px;
+            background: #3559D5;
+            bottom: -100px;
+            left: -80px;
+        }
+        
+        .glass-card {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3559D5);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: white;
+            border-color: #3559D5;
+            color: #3559D5;
+        }
+        
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .certificate-preview {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 2px solid #cbd5e0;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 20px 0;
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .certificate-content {
+            text-align: center;
+            width: 100%;
+        }
+        
+        .university-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        
+        .certificate-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #dc2626;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+        
+        .student-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e40af;
+            margin: 20px 0;
+            text-transform: uppercase;
+        }
+        
+        .course-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #dc2626;
+            margin: 15px 0;
+        }
+        
+        .completion-date {
+            font-size: 16px;
+            color: #6b7280;
+            margin-top: 20px;
+        }
+        
+        .signatures {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-top: 40px;
+        }
+        
+        .signature {
+            text-align: center;
+            font-size: 12px;
+            color: #374151;
+        }
+        
+        .certificate-border {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3559D5);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Улучшенные стили для теории */
+        .theory-content {
+            line-height: 1.8;
+            color: #2d3748;
+        }
+        
+        .theory-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border-left: 4px solid #3559D5;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .theory-section:hover {
+            box-shadow: 0 6px 20px rgba(53, 89, 213, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .theory-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3559D5, #4c6ef5);
+            border-radius: 12px;
+            color: white;
+            font-size: 24px;
+            margin-right: 16px;
+            box-shadow: 0 4px 12px rgba(53, 89, 213, 0.3);
+        }
+        
+        .theory-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .theory-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0;
+        }
+        
+        .term-highlight {
+            background: linear-gradient(120deg, #fef3c7 0%, #fde68a 100%);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            color: #92400e;
+            box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2);
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-left: 4px solid #3b82f6;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 16px 0;
+            display: flex;
+            align-items: start;
+        }
+        
+        .info-box-icon {
+            font-size: 24px;
+            margin-right: 12px;
+            color: #1e40af;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 16px 0;
+            display: flex;
+            align-items: start;
+        }
+        
+        .warning-box-icon {
+            font-size: 24px;
+            margin-right: 12px;
+            color: #92400e;
+        }
+        
+        .success-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 4px solid #10b981;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 16px 0;
+            display: flex;
+            align-items: start;
+        }
+        
+        .success-box-icon {
+            font-size: 24px;
+            margin-right: 12px;
+            color: #065f46;
+        }
+        
+        .example-box {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+        
+        .example-title {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            color: #3559D5;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        
+        .example-title i {
+            margin-right: 8px;
+        }
+        
+        .key-points {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .key-points-title {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+        
+        .key-points-title i {
+            color: #3559D5;
+            margin-right: 10px;
+        }
+        
+        .key-point-item {
+            display: flex;
+            align-items: start;
+            padding: 12px;
+            margin: 8px 0;
+            background: #f8fafc;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .key-point-item:hover {
+            background: #e2e8f0;
+            transform: translateX(4px);
+        }
+        
+        .key-point-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #3559D5, #4c6ef5);
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .emoji-header {
+            font-size: 28px;
+            margin-right: 12px;
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .quiz-option:hover {
+            border-color: #3559D5;
+            transform: translateY(-2px);
+            background: rgba(53, 89, 213, 0.05);
+        }
+        
+        .quiz-option.selected {
+            border-color: #3559D5;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        }
+        
+        .quiz-option.locked {
+            opacity: 0.7;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .quiz-option.locked.selected {
+            border-color: #3559D5;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        }
+        
+        .code-editor {
+            background: #1a202c;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Nunito Sans';
+            font-size: 14px;
+            color: #e2e8f0;
+            min-height: 200px;
+            resize: vertical;
+            line-height: 1.5;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .flashcard {
+            perspective: 1000px;
+            height: 300px;
+            cursor: pointer;
+        }
+        
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .flashcard-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, #3559D5);
+            color: white;
+        }
+        
+        .sidebar-item {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .sidebar-item.active {
+            background: linear-gradient(135deg, #3559D5);
+            color: white;
+            border-color: #3559D5;
+        }
+        
+        .sidebar-item.completed {
+            background: rgba(72, 187, 120, 0.1);
+            border-color: #48bb78;
+            color: #2d3748;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #cbd5e0;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-zone:hover {
+            border-color: #3559D5;
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top-color: #3559D5;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .theory-content {
+            line-height: 1.8;
+            font-size: 16px;
+            color: #4a5568;
+        }
+        
+        .theory-content p {
+            margin-bottom: 20px;
+        }
+
+        .icon-large {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: #667eea;
+        }
+
+        .page-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .page-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cbd5e0;
+            transition: all 0.3s ease;
+        }
+
+        .page-dot.active {
+            background: #3559D5;
+            width: 24px;
+            border-radius: 6px;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .loading-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .small-spinner {
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top-color: #3559D5;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        .certificate-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .logo-img {
+            height: 80px;
+            width: auto;
+            filter: drop-shadow(0 4px 8px rgba(53, 89, 213, 0.2));
+        }
+
+        .certificate-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+
+        #app {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            position: relative;
+            z-index: 10;
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px 0;
+        }
+
+        .header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+
+        .lang-switcher {
+            display: flex;
+            gap: 8px;
+            background: rgba(53, 89, 213, 0.1);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(53, 89, 213, 0.1);
+            color: #3559D5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            margin-left: 12px;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(53, 89, 213, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(53, 89, 213, 0.2);
+        }
+        
+        body.dark-theme .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+        }
+        
+        body.dark-theme .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .lang-btn.active {
+            background: #3559D5;
+            color: white;
+        }
+
+        .home-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: white;
+            border-color: #3559D5;
+            color: #3559D5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(53, 89, 213, 0.2);
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: rgba(53, 89, 213, 0.2);
+        }
+
+
+        
+        
+        /* ========== СТИЛИ ДЛЯ ТЕОРИИ КАК НА СКРИНШОТЕ ========== */
+        
+        .theory-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #2d3748;
+        }
+        
+        .theory-content h2 {
+            font-size: 30px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 30px 0 20px 0;
+        }
+        
+        .theory-content h3 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 24px 0 16px 0;
+        }
+        
+        .theory-content p {
+            margin-bottom: 20px;
+            line-height: 1.8;
+            color: #4a5568;
+        }
+        
+        .theory-content ul {
+            margin: 20px 0;
+            padding-left: 30px;
+        }
+        
+        .theory-content li {
+            margin-bottom: 12px;
+            color: #4a5568;
+            position: relative;
+        }
+        
+        .theory-content li strong {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        
+        /* Информационные блоки из примера */
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 5px solid #2196F3;
+            padding: 20px 20px 20px 60px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.15);
+            position: relative;
+        }
+        
+        .info-box::before {
+            content: 'ℹ️';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 28px;
+        }
+        
+        .info-box p {
+            color: #1565c0;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .info-box strong {
+            color: #0d47a1;
+            font-size: 1.1em;
+        }
+        
+        .tip-box {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-left: 5px solid #4CAF50;
+            padding: 20px 20px 20px 60px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.15);
+            position: relative;
+        }
+        
+        .tip-box::before {
+            content: '💡';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 28px;
+        }
+        
+        .tip-box p {
+            color: #2e7d32;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .tip-box strong {
+            color: #1b5e20;
+            font-size: 1.1em;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left: 5px solid #ff9800;
+            padding: 20px 20px 20px 60px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.15);
+            position: relative;
+        }
+        
+        .warning-box::before {
+            content: '⚠️';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 28px;
+        }
+        
+        .warning-box p {
+            color: #e65100;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .warning-box strong {
+            color: #bf360c;
+            font-size: 1.1em;
+        }
+        
+        .example-box {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-left: 5px solid #9c27b0;
+            padding: 20px 20px 20px 60px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.15);
+            position: relative;
+        }
+        
+        .example-box::before {
+            content: '📝';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 28px;
+        }
+        
+        .example-box p {
+            color: #6a1b9a;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .example-box strong {
+            color: #4a148c;
+            font-size: 1.1em;
+        }
+        
+        /* Блоки кода как на скриншоте */
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .code-block code {
+            display: block;
+            line-height: 1.6;
+            font-size: 14px;
+            white-space: pre;
+        }
+        
+        .code-header {
+            display: none; /* Скрываем заголовок как на скриншоте */
+        }
+        
+        .code-body {
+            padding: 0;
+        }
+        
+        .code-body pre {
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Блоки объяснений */
+        .explanation-box {
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        
+        .explanation-box p {
+            margin: 0;
+            color: #2d3748;
+        }
+        
+        .explanation-box .font-semibold {
+            color: #1a202c;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .theory-content {
+                font-size: 16px;
+            }
+            
+            .theory-content h2 {
+                font-size: 24px;
+            }
+            
+            .theory-content h3 {
+                font-size: 20px;
+            }
+            
+            .code-block {
+                font-size: 12px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Header with Logo and Language Switcher -->
+    <div class="header">
+        <div class="container">
+            <div class="flex justify-between items-center">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <a href="http://localhost:8000" class="home-btn">
+                        <i class="fas fa-home"></i> <span class="home-btn-text" data-kk="Басты бет" data-ru="На главную">На главную</span>
+                    </a>
+            <img src="/static/images/logo.svg" alt="Ai-Ustaz Logo" class="logo-img" onerror="this.style.display='none'">
+            <!--h1 style="font-size: 20px;">AMANZHOLOV UNIVERSITY <br> AI-SANA</h1-->
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="lang-switcher">
+                        <button class="lang-btn active" onclick="switchLanguage('kk')" id="lang-kk">ҚАЗ</button>
+                        <button class="lang-btn" onclick="switchLanguage('ru')" id="lang-ru">РУС</button>
+                    </div>
+                    <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle" title="Переключить тему">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app">
+        <!-- Начинаем сразу с загрузки файла -->
+        <div class="min-h-screen flex items-center justify-center p-4">
+            <div class="max-w-2xl w-full fade-in">
+                <div class="glass-card p-8">
+                    <div class="text-center mb-8">
+                        <h1 class="text-4xl font-bold mb-2" style="color: #3559D5;">Создайте электронный курс</h1>
+                        <p class="text-gray-600">Загрузите PDF-файл для генерации микрообучения</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <div class="upload-zone" onclick="document.getElementById('pdf-input').click()">
+                            <div class="icon-large">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2 text-gray-800">Загрузите PDF-файл</h3>
+                            <p class="text-gray-500 mb-4">Кликните или перетащите файл в эту область</p>
+                            <p id="file-name" class="text-sm text-gray-400">Файл не выбран</p>
+                            <input type="file" id="pdf-input" accept=".pdf" 
+                                   onchange="handleFileSelect(event)" class="hidden">
+                        </div>
+                    </div>
+
+                    <button id="generate-btn" onclick="generateMicrolearning()" 
+                            disabled class="btn-primary w-full text-lg py-4">
+                        <i class="fas fa-robot mr-2"></i>Создать микрообучение
+                    </button>
+
+                    <!-- Кнопка перехода на главную страницу -->
+                    <div class="text-center mt-6">
+                        <button onclick="showMainPage()" class="btn-secondary">
+                            <i class="fas fa-book mr-2"></i>Библиотека курсов
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальный state приложения
+        const state = {
+            step: 'upload', // Начинаем сразу с загрузки файла
+            pdfFile: null,
+            currentCourse: null,
+            courses: [],
+            currentModule: null,
+            currentTheoryPage: 0,
+            currentCardIndex: 0,
+            currentQuestionIndex: 0,
+            quizAnswers: [],
+            quizResults: null,
+            completedModules: {},
+            practicalCode: '',
+            practicalOutput: '',
+            practicalCheckResult: null,
+            checkingAnswer: false,
+            certificateData: null,
+            lockedQuestions: new Set(),
+            aiCheckResults: {},  // Результаты проверки ИИ для коротких ответов
+            checkingShortAnswer: false  // Флаг проверки короткого ответа
+        };
+
+        // Переводы интерфейса
+        const translations = {
+            ru: {
+                createCourse: "Создайте электронный курс",
+                uploadDescription: "Загрузите PDF-файл для генерации микрообучения",
+                uploadPdf: "Загрузите PDF-файл",
+                clickOrDrag: "Кликните или перетащите файл в эту область",
+                fileNotSelected: "Файл не выбран",
+                createMicrolearning: "Создать",
+                toMainPage: "Библиотека курсов",
+                toUploadPage: "Создать новый курс",
+                generatingCourse: "Создаю курс...",
+                analyzingMaterial: "AI анализирует материал и создает контент",
+                mayTakeTime: "Это может занять несколько минут",
+                back: "Назад",
+                progress: "Прогресс",
+                modules: "модулей",
+                courseModules: "Модули курса",
+                theory: "Теория",
+                flashcards: "Флешкарты",
+                tests: "Тесты",
+                practice: "Практика",
+                pages: "стр",
+                cards: "шт",
+                tasks: "шт",
+                completeModule: "Завершить модуль",
+                next: "Далее",
+                previous: "Назад",
+                page: "Страница",
+                of: "из",
+                flipCard: "Кликните для переворота карточки",
+                testTasks: "Тестовые задания",
+                question: "Вопрос",
+                correct: "Правильно",
+                incorrect: "Неправильно",
+                submitTest: "Завершить тест",
+                testResults: "Результаты теста",
+                excellent: "Отлично! Модуль пройден",
+                tryAgain: "Попробуйте еще раз для лучшего результата",
+                yourAnswer: "Ваш ответ",
+                correctAnswer: "Правильный ответ",
+                retakeTest: "Пройти заново",
+                practicalTask: "Практическое задание",
+                task: "Задание",
+                codeEditor: "Редактор кода",
+                runCode: "Запустить код",
+                checkCode: "Проверить код",
+                checking: "Проверка...",
+                aiChecking: "ИИ проверяет ваш код...",
+                greatCodeCorrect: "✓ Отлично! Код правильный!",
+                needsImprovement: "✗ Требуются исправления",
+                errorsFound: "Найденные ошибки",
+                suggestions: "Советы",
+                expectedResult: "Ожидаемый результат",
+                checkAnswer: "Проверить ответ",
+                writeSolution: "Напишите ваше решение здесь...",
+                instruction: "Инструкция",
+                certificate: "Ваш сертификат",
+                certificatePreview: "Предпросмотр сертификата о прохождении курса",
+                downloadCertificate: "Скачать сертификат",
+                enterName: "Пожалуйста, введите ваше имя для сертификата:",
+                congratulations: "Поздравляем!",
+                successfullyCompleted: "вы успешно завершили курс",
+                certificateDownloaded: "Сертификат был скачан автоматически",
+                createNewCourse: "Создать новый курс",
+                downloadAgain: "Скачать сертификат еще раз",
+                viewAllCourses: "Просмотреть все курсы",
+                myCourses: "Мои курсы",
+                noCourses: "У вас пока нет созданных курсов",
+                deleteCourse: "Удалить курс",
+                created: "Создан",
+                continueLearning: "Продолжить обучение"
+            },
+            kk: {
+                createCourse: "Электронды курсты жасаңыз",
+                uploadDescription: "Микрооқытуды генерациялау үшін PDF-файлды жүктеңіз",
+                uploadPdf: "PDF-файлды жүктеңіз",
+                clickOrDrag: "Файлды осы аймаққа басыңыз немесе сүйреңіз",
+                fileNotSelected: "Файл таңдалмаған",
+                createMicrolearning: "Бастау",
+                toMainPage: "Курстар кітапханасы",
+                toUploadPage: "Жаңа курс жасау",
+                generatingCourse: "Курс жасалуда...",
+                analyzingMaterial: "AI материалды талдап, контент жасайды",
+                mayTakeTime: "Бірнеше минут қалуы мүмкін",
+                back: "Артқа",
+                progress: "Прогресс",
+                modules: "модуль",
+                courseModules: "Курс модульдері",
+                theory: "Теория",
+                flashcards: "Флешкарталар",
+                tests: "Тесттер",
+                practice: "Практика",
+                pages: "бет",
+                cards: "дана",
+                tasks: "дана",
+                completeModule: "Модульді аяқтау",
+                next: "Келесі",
+                previous: "Алдыңғы",
+                page: "Бет",
+                of: "ішінен",
+                flipCard: "Картаны аудару үшін басыңыз",
+                testTasks: "Тесттік тапсырмалар",
+                question: "Сұрақ",
+                correct: "Дұрыс",
+                incorrect: "Қате",
+                submitTest: "Тестті аяқтау",
+                testResults: "Тест нәтижелері",
+                excellent: "Тамаша! Модуль өтілді",
+                tryAgain: "Жақсы нәтиже үшін қайтадан көріңіз",
+                yourAnswer: "Сіздің жауабыңыз",
+                correctAnswer: "Дұрыс жауап",
+                retakeTest: "Қайта өту",
+                practicalTask: "Практикалық тапсырма",
+                task: "Тапсырма",
+                codeEditor: "Код редакторы",
+                runCode: "Кодты іске қосу",
+                checkCode: "Кодты тексеру",
+                checking: "Тексеру...",
+                aiChecking: "AI сіздің кодыңызды тексереді",
+                greatCodeCorrect: "✓ Тамаша! Код дұрыс!",
+                needsImprovement: "✗ Жетілдіру қажет",
+                errorsFound: "Табылған қателер",
+                suggestions: "Кеңестер",
+                expectedResult: "Күтілетін нәтиже",
+                checkAnswer: "Жауапты тексеру",
+                writeSolution: "Шешіміңізді осы жерге жазыңыз...",
+                instruction: "Нұсқаулық",
+                certificate: "Сіздің сертификатыңыз",
+                certificatePreview: "Курсты аяқтау сертификатының алдын ала қарауы",
+                downloadCertificate: "Сертификатты жүктеу",
+                enterName: "Сертификат үшін атыңызды енгізіңіз:",
+                congratulations: "Құттықтаймыз!",
+                successfullyCompleted: "Сіз курсты сәтті аяқтадыңыз",
+                certificateDownloaded: "Сертификат автоматты түрде жүктелді",
+                createNewCourse: "Жаңа курс жасау",
+                downloadAgain: "Сертификатты қайта жүктеу",
+                viewAllCourses: "Барлық курсарды қарау",
+                myCourses: "Менің курстарым",
+                noCourses: "Сізде әлі курстар жоқ",
+                deleteCourse: "Курсты жою",
+                created: "Жасалған",
+                continueLearning: "Оқуды жалғастыру"
+            }
+        };
+
+        let currentLang = localStorage.getItem('ai-ustaz_lang') || 'ru';
+
+        function t(key) {
+            return translations[currentLang][key] || key;
+        }
+
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        function initApp() {
+            console.log('Initializing Ai-Ustaz app...');
+            loadCourses();
+            loadTheme(); // Загружаем сохраненную тему
+            checkAPIStatus();
+            
+            // Инициализация текста кнопки "На главную"
+            const savedLang = localStorage.getItem('ai-ustaz_lang') || 'ru';
+            const homeBtn = document.querySelector('.home-btn-text');
+            if (homeBtn) {
+                homeBtn.textContent = homeBtn.getAttribute(`data-${savedLang}`);
+            }
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseId = urlParams.get('id');
+            
+            if (courseId) {
+                loadCourse(parseInt(courseId));
+            } else {
+                render();
+            }
+        }
+
+        // ==================== ХРАНИЛИЩЕ ====================
+        function loadCourses() {
+            try {
+                const saved = localStorage.getItem('ai-ustaz_courses');
+                if (saved) {
+                    state.courses = JSON.parse(saved);
+                    console.log('Loaded courses:', state.courses.length);
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                state.courses = [];
+            }
+        }
+
+        function saveCourses() {
+            try {
+                localStorage.setItem('ai-ustaz_courses', JSON.stringify(state.courses));
+            } catch (error) {
+                console.error('Error saving courses:', error);
+            }
+        }
+
+        function saveCourse(courseData) {
+            const course = {
+                id: Date.now(),
+                title: courseData.title,
+                createdAt: new Date().toISOString(),
+                microlearning: courseData.microlearning,
+                completedModules: {
+                    theory: false,
+                    flashcards: false,
+                    textQuiz: false,
+                    practicalQuiz: false
+                },
+                completedTasks: {
+                    textQuiz: [],
+                    practicalQuiz: []
+                },
+                viewedPages: {
+                    theory: [],
+                    flashcards: []
+                }
+            };
+            state.courses.push(course);
+            saveCourses();
+            return course;
+        }
+        
+        function markPageViewed(moduleType, pageIndex) {
+            if (!state.currentCourse) return;
+            
+            if (!state.currentCourse.viewedPages) {
+                state.currentCourse.viewedPages = {
+                    theory: [],
+                    flashcards: []
+                };
+            }
+            
+            if (!state.currentCourse.viewedPages[moduleType].includes(pageIndex)) {
+                state.currentCourse.viewedPages[moduleType].push(pageIndex);
+                
+                const courseIndex = state.courses.findIndex(c => c.id === state.currentCourse.id);
+                if (courseIndex !== -1) {
+                    state.courses[courseIndex] = state.currentCourse;
+                    saveCourses();
+                }
+            }
+        }
+        
+        function isAllPagesViewed(moduleType) {
+            if (!state.currentCourse || !state.currentCourse.microlearning[moduleType]) return false;
+            
+            const totalPages = state.currentCourse.microlearning[moduleType].length;
+            const viewedPages = state.currentCourse.viewedPages?.[moduleType]?.length || 0;
+            
+            return viewedPages === totalPages;
+        }
+        
+        function markTaskCompleted(moduleType, taskIndex) {
+            if (!state.currentCourse) return;
+            
+            if (!state.currentCourse.completedTasks) {
+                state.currentCourse.completedTasks = {
+                    textQuiz: [],
+                    practicalQuiz: []
+                };
+            }
+            
+            if (!state.currentCourse.completedTasks[moduleType].includes(taskIndex)) {
+                state.currentCourse.completedTasks[moduleType].push(taskIndex);
+                
+                const courseIndex = state.courses.findIndex(c => c.id === state.currentCourse.id);
+                if (courseIndex !== -1) {
+                    state.courses[courseIndex] = state.currentCourse;
+                    saveCourses();
+                }
+            }
+        }
+        
+        function isAllTasksCompleted(moduleType) {
+            if (!state.currentCourse || !state.currentCourse.microlearning[moduleType]) return false;
+            
+            const totalTasks = state.currentCourse.microlearning[moduleType].length;
+            const completedTasks = state.currentCourse.completedTasks?.[moduleType]?.length || 0;
+            
+            return completedTasks === totalTasks;
+        }
+
+        function deleteCourse(courseId) {
+            if (confirm(currentLang === 'ru' ? 'Удалить этот курс?' : 'Бұл курс жойылсын ба?')) {
+                state.courses = state.courses.filter(c => c.id !== courseId);
+                saveCourses();
+                render();
+            }
+        }
+
+        function loadCourse(courseId) {
+            const course = state.courses.find(c => c.id === courseId);
+            if (course) {
+                if (course.microlearning && course.microlearning.textQuiz) {
+                    course.microlearning.textQuiz = validateAndFixQuestions(course.microlearning.textQuiz);
+                }
+                
+                state.currentCourse = course;
+                state.completedModules = course.completedModules;
+                state.currentModule = 'theory';
+                state.step = 'learning';
+                state.lockedQuestions.clear();
+                render();
+            }
+        }
+
+        function updateCourseProgress() {
+            if (state.currentCourse) {
+                const course = state.courses.find(c => c.id === state.currentCourse.id);
+                if (course) {
+                    course.completedModules = {...state.completedModules};
+                    saveCourses();
+                }
+            }
+        }
+
+        // ==================== API И ПРОВЕРКИ ====================
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch('/api/check-api');
+                const data = await response.json();
+                
+                const statusElement = document.getElementById('status');
+                if (statusElement) {
+                    if (data.api_key_configured) {
+                        statusElement.innerHTML = `<i class="fas fa-check-circle text-green-500 mr-2"></i>API: ${data.api_working ? 'Доступен' : 'Не отвечает'}`;
+                    } else {
+                        statusElement.innerHTML = `<i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>API ключ не настроен`;
+                    }
+                }
+                
+                return data;
+            } catch (error) {
+                const statusElement = document.getElementById('status');
+                if (statusElement) {
+                    statusElement.innerHTML = `<i class="fas fa-times-circle text-red-500 mr-2"></i>Ошибка подключения`;
+                }
+                console.error('API check failed:', error);
+                return null;
+            }
+        }
+
+        // ==================== PDF ОБРАБОТКА ====================
+        async function extractTextFromPDF(file) {
+            try {
+                console.log('Extracting text from PDF...');
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = '';
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                }
+                
+                console.log('PDF text extracted, length:', fullText.length);
+                return fullText;
+            } catch (error) {
+                console.error('PDF extraction error:', error);
+                throw new Error('Ошибка чтения PDF файла');
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                state.pdfFile = file;
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('generate-btn').disabled = false;
+            } else {
+                alert(currentLang === 'ru' ? 'Пожалуйста, выберите PDF файл' : 'PDF файлды таңдаңыз');
+            }
+        }
+
+        async function generateMicrolearning() {
+            if (!state.pdfFile) {
+                alert(currentLang === 'ru' ? 'Сначала выберите PDF файл' : 'Алдымен PDF файлды таңдаңыз');
+                return;
+            }
+            
+            state.step = 'generating';
+            render();
+            
+            try {
+                const pdfText = await extractTextFromPDF(state.pdfFile);
+                
+                const response = await fetch('/api/generate-microlearning', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        pdf_text: pdfText,
+                        pdf_name: state.pdfFile.name
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.microlearning.textQuiz && data.microlearning.textQuiz.length < 10) {
+                        console.warn(`Создано только ${data.microlearning.textQuiz.length} вопросов, требуется минимум 10`);
+                    }
+                    
+                    const course = saveCourse({
+                        title: data.title,
+                        microlearning: data.microlearning
+                    });
+                    
+                    state.currentCourse = course;
+                    state.completedModules = course.completedModules;
+                    state.currentModule = 'theory';
+                    state.step = 'learning';
+                    render();
+                } else {
+                    alert((currentLang === 'ru' ? 'Ошибка: ' : 'Қате: ') + data.error);
+                    state.step = 'upload';
+                    render();
+                }
+            } catch (error) {
+                console.error('Generation error:', error);
+                alert(currentLang === 'ru' ? 'Произошла ошибка при создании курса' : 'Курсты жасау кезінде қате орын алды');
+                state.step = 'upload';
+                render();
+            }
+        }
+
+        // ==================== НАВИГАЦИЯ ====================
+        function showMainPage() {
+            state.step = 'main';
+            render();
+        }
+
+        function openModule(moduleName) {
+            state.currentModule = moduleName;
+            state.currentTheoryPage = 0;
+            state.currentCardIndex = 0;
+            state.currentQuestionIndex = 0;
+            state.quizAnswers = [];
+            state.quizResults = null;
+            state.practicalCode = '';
+            state.practicalOutput = '';
+            state.practicalCheckResult = null;
+            state.checkingAnswer = false;
+            state.lockedQuestions.clear();
+            render();
+        }
+
+        function completeModule() {
+            if (state.currentModule) {
+                state.completedModules[state.currentModule] = true;
+                updateCourseProgress();
+                
+                const modules = ['theory', 'flashcards', 'textQuiz', 'practicalQuiz'];
+                const currentIndex = modules.indexOf(state.currentModule);
+                
+                const allCompleted = modules.every(module => state.completedModules[module]);
+                
+                if (allCompleted) {
+                    setTimeout(() => {
+                        generateCertificate();
+                    }, 1000);
+                } else if (currentIndex < modules.length - 1) {
+                    setTimeout(() => {
+                        openModule(modules[currentIndex + 1]);
+                    }, 1000);
+                }
+            }
+        }
+
+        function backToHome() {
+            state.step = 'upload';
+            state.currentCourse = null;
+            render();
+        }
+
+        // ==================== СЕРТИФИКАТ ====================
+        function generateCertificate() {
+            const studentName = prompt(t('enterName'));
+            if (!studentName) return;
+            
+            const courseTitle = state.currentCourse.title;
+            const hasKazakhChars = /[әғқңөұүіһӘҒҚҢӨҰҮІҺ]/.test(courseTitle);
+            const language = hasKazakhChars ? 'kz' : 'ru';
+            
+            const completionDate = new Date().toLocaleDateString('ru-RU');
+            
+            state.certificateData = {
+                studentName,
+                courseTitle,
+                completionDate,
+                language
+            };
+            
+            showCertificatePreview();
+        }
+
+        function showCertificatePreview() {
+            const app = document.getElementById('app');
+            if (!app) return;
+            
+            const data = state.certificateData;
+            
+            app.innerHTML = `
+                <div class="min-h-screen flex items-center justify-center p-8">
+                    <div class="max-w-4xl w-full fade-in">
+                        <button onclick="backToLearning()" class="btn-secondary mb-6">
+                            <i class="fas fa-arrow-left mr-2"></i>${t('back')}
+                        </button>
+
+                        <div class="glass-card p-8">
+                            <div class="text-center mb-8">
+                                <h1 class="text-4xl font-bold mb-2 text-gray-800">${t('certificate')}</h1>
+                                <p class="text-gray-600">${t('certificatePreview')}</p>
+                            </div>
+
+                            <div class="certificate-preview">
+                                <div class="certificate-border"></div>
+                                <div class="certificate-content">
+                                    <div class="university-name">
+                                        ${data.language === 'kz' 
+                                            ? 'СӘРСЕН АМАНЖОЛОВ АТЫНДАҒЫ ШЫҒЫС ҚАЗАҚСТАН УНИВЕРСИТЕТІ'
+                                            : 'ВОСТОЧНО-КАЗАХСТАНСКИЙ УНИВЕРСИТЕТ ИМЕНИ САРСЕНА АМАНЖОЛОВА'
+                                        }
+                                    </div>
+                                    
+                                    <div class="certificate-title">СЕРТИФИКАТ</div>
+                                    
+                                    <div class="text-gray-600 mb-4">
+                                        ${data.language === 'kz'
+                                            ? 'Осы сертификат'
+                                            : 'Настоящий сертификат подтверждает, что'
+                                        }
+                                    </div>
+                                    
+                                    <div class="student-name">${data.studentName.toUpperCase()}</div>
+                                    
+                                    <div class="text-gray-600 mb-4">
+                                        ${data.language === 'kz'
+                                            ? `«${data.courseTitle}» курсын аяқтап, оқыту бағдарламасында қарастырылған барлық материалдарды меңгергенін растайды.`
+                                            : `завершила курс «${data.courseTitle}» и освоила все предусмотренные учебной программой материалы.`
+                                        }
+                                    </div>
+                                    
+                                    <div class="completion-date">${data.completionDate}</div>
+                                    
+                                    <div class="signatures">
+                                        <div class="signature">
+                                            _________________________<br>
+                                            ${data.language === 'kz' 
+                                                ? 'Басқарма төрағасы-ректор, профессор Төлеген М.Ә.'
+                                                : 'Председатель правления-ректор, профессор Төлеген М.Ә.'
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-8">
+                                <button onclick="downloadCertificate()" class="btn-primary mr-4">
+                                    <i class="fas fa-download mr-2"></i>${t('downloadCertificate')}
+                                </button>
+                                <button onclick="backToLearning()" class="btn-secondary">
+                                    <i class="fas fa-arrow-left mr-2"></i>${t('back')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function downloadCertificate() {
+            const data = state.certificateData;
+            
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="min-h-screen flex items-center justify-center p-8">
+                    <div class="glass-card p-12 text-center max-w-md fade-in">
+                        <div class="spinner mx-auto mb-6"></div>
+                        <h2 class="text-2xl font-bold mb-4 text-gray-800">${t('generatingCourse')}</h2>
+                        <p class="text-gray-600">${currentLang === 'ru' 
+                            ? 'Сертификат от Восточно-Казахстанского университета имени Сарсена Аманжолова' 
+                            : 'Сәрсен Аманжолов атындағы Шығыс Қазақстан университетінің сертификаты'}</p>
+                    </div>
+                </div>
+            `;
+            
+            fetch('/api/generate-certificate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    student_name: data.studentName,
+                    course_title: data.courseTitle,
+                    completion_date: data.completionDate,
+                    language: data.language
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error(currentLang === 'ru' ? 'Ошибка генерации сертификата' : 'Сертификатты генерациялау қатесі');
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `${currentLang === 'ru' ? 'Сертификат' : 'Сертификат'}_${data.studentName}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                showCongratulations(data.studentName);
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert(currentLang === 'ru' 
+                    ? 'Произошла ошибка при генерации сертификата' 
+                    : 'Сертификатты генерациялау кезінде қате орын алды');
+                showCertificatePreview();
+            });
+        }
+
+        function backToLearning() {
+            state.step = 'learning';
+            render();
+        }
+
+        function showCongratulations(studentName) {
+            const app = document.getElementById('app');
+            if (!app) return;
+            
+            app.innerHTML = `
+                <div class="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-green-400 to-blue-500">
+                    <div class="glass-card p-12 text-center max-w-2xl fade-in">
+                        <div class="icon-large text-green-500">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h1 class="text-4xl font-bold mb-6 text-gray-800">${t('congratulations')}</h1>
+                        <p class="text-xl text-gray-600 mb-6">
+                            <strong>${studentName}</strong>, ${t('successfullyCompleted')}<br>
+                            "<strong>${state.currentCourse.title}</strong>"
+                        </p>
+                        <p class="text-gray-500 mb-8">
+                            ${currentLang === 'ru' 
+                                ? 'Сертификат от Восточно-Казахстанского университета имени Сарсена Аманжолова<br>был скачан автоматически.'
+                                : 'Сәрсен Аманжолов атындағы Шығыс Қазақстан университетінің сертификаты<br>автоматты түрде жүктелді.'}
+                        </p>
+                        <div class="space-y-4">
+                            <button onclick="showMainPage()" class="btn-primary">
+                                <i class="fas fa-book mr-2"></i>${t('myCourses')}
+                            </button>
+                            <br>
+                            <button onclick="backToHome()" class="btn-secondary mr-2">
+                                <i class="fas fa-plus mr-2"></i>${t('createNewCourse')}
+                            </button>
+                            <button onclick="generateCertificate()" class="btn-secondary">
+                                <i class="fas fa-download mr-2"></i>${t('downloadAgain')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==================== ТЕОРИЯ ====================
+        function nextTheoryPage() {
+            const pages = state.currentCourse.microlearning.theory;
+            markPageViewed('theory', state.currentTheoryPage);
+            
+            if (state.currentTheoryPage < pages.length - 1) {
+                state.currentTheoryPage++;
+                render();
+            }
+        }
+
+        function prevTheoryPage() {
+            if (state.currentTheoryPage > 0) {
+                markPageViewed('theory', state.currentTheoryPage);
+                state.currentTheoryPage--;
+                render();
+            }
+        }
+
+        // ==================== ФЛЕШКАРТЫ ====================
+        function flipCard() {
+            const flashcard = document.querySelector('.flashcard');
+            if (flashcard) {
+                flashcard.classList.toggle('flipped');
+            }
+        }
+
+        function nextCard() {
+            const cards = state.currentCourse.microlearning.flashcards;
+            markPageViewed('flashcards', state.currentCardIndex);
+            
+            if (state.currentCardIndex < cards.length - 1) {
+                state.currentCardIndex++;
+                const flashcard = document.querySelector('.flashcard');
+                if (flashcard && flashcard.classList.contains('flipped')) {
+                    flashcard.classList.remove('flipped');
+                }
+                render();
+            }
+        }
+
+        function prevCard() {
+            if (state.currentCardIndex > 0) {
+                markPageViewed('flashcards', state.currentCardIndex);
+                state.currentCardIndex--;
+                const flashcard = document.querySelector('.flashcard');
+                if (flashcard && flashcard.classList.contains('flipped')) {
+                    flashcard.classList.remove('flipped');
+                }
+                render();
+            }
+        }
+
+        // ==================== ТЕСТОВЫЕ ЗАДАНИЯ ====================
+        function selectAnswer(questionIndex, answerIndex) {
+            if (!state.lockedQuestions.has(questionIndex)) {
+                state.quizAnswers[questionIndex] = answerIndex;
+                render();
+            }
+            return false;
+        }
+
+        function nextQuestion() {
+            const questions = state.currentCourse.microlearning.textQuiz;
+            
+            if (state.quizAnswers[state.currentQuestionIndex] === undefined) {
+                alert(currentLang === 'ru' ? 'Пожалуйста, выберите ответ' : 'Жауапты таңдаңыз');
+                return;
+            }
+            
+            state.lockedQuestions.add(state.currentQuestionIndex);
+            
+            if (state.currentQuestionIndex < questions.length - 1) {
+                state.currentQuestionIndex++;
+                render();
+            }
+        }
+
+        function prevQuestion() {
+            if (state.currentQuestionIndex > 0) {
+                state.currentQuestionIndex--;
+                render();
+            }
+        }
+
+        function submitTextQuiz() {
+            const questions = state.currentCourse.microlearning.textQuiz;
+            
+            for (let i = 0; i < questions.length; i++) {
+                if (state.quizAnswers[i] === undefined || 
+                    (questions[i].type === 'short_answer' && (!state.quizAnswers[i] || state.quizAnswers[i].trim().length === 0))) {
+                    alert(currentLang === 'ru' ? 'Пожалуйста, ответьте на все вопросы' : 'Барлық сұрақтарға жауап беріңіз');
+                    state.currentQuestionIndex = i;
+                    render();
+                    return;
+                }
+            }
+            
+            for (let i = 0; i < questions.length; i++) {
+                state.lockedQuestions.add(i);
+            }
+            
+            const results = questions.map((q, i) => {
+                const userAnswer = state.quizAnswers[i];
+                let isCorrect = false;
+                
+                if (q.type === 'multiple_choice') {
+                    isCorrect = userAnswer === q.correctAnswer || userAnswer === q.correct_answer;
+                } else if (q.type === 'true_false') {
+                    const correctAnswer = q.correctAnswer !== undefined ? q.correctAnswer : q.correct_answer;
+                    isCorrect = userAnswer === (correctAnswer ? 0 : 1);
+                } else if (q.type === 'short_answer') {
+                    isCorrect = true;
+                }
+                
+                return {
+                    question: q.question,
+                    userAnswer: userAnswer,
+                    correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : q.correct_answer,
+                    isCorrect: isCorrect,
+                    explanation: q.explanation,
+                    type: q.type,
+                    options: q.options
+                };
+            });
+            
+            state.quizResults = results;
+            
+            for (let i = 0; i < questions.length; i++) {
+                markTaskCompleted('textQuiz', i);
+            }
+            
+            const correct = results.filter(r => r.isCorrect).length;
+            const percentage = Math.round((correct / results.length) * 100);
+            
+            if (percentage >= 70) {
+                completeModule();
+            }
+            
+            render();
+        }
+
+        function validateAndFixQuestions(questions) {
+            if (!questions || !Array.isArray(questions)) return questions;
+            
+            return questions.map((q, index) => {
+                const fixedQuestion = {...q};
+                
+                if (fixedQuestion.type === 'multiple_choice' && 
+                    (!fixedQuestion.options || !Array.isArray(fixedQuestion.options) || fixedQuestion.options.length === 0)) {
+                    
+                    console.warn(`🔄 Исправляем вопрос ${index}: отсутствуют options`);
+                    fixedQuestion.options = [
+                        currentLang === 'ru' ? "Да, это верно" : "Ия, бұл дұрыс",
+                        currentLang === 'ru' ? "Нет, это неверно" : "Жоқ, бұл дұрыс емес", 
+                        currentLang === 'ru' ? "Частично верно" : "Ішінара дұрыс",
+                        currentLang === 'ru' ? "Затрудняюсь ответить" : "Жауап беру қиын"
+                    ];
+                    
+                    if (fixedQuestion.correctAnswer === undefined && fixedQuestion.correct_answer === undefined) {
+                        fixedQuestion.correctAnswer = 0;
+                    }
+                }
+                
+                if (fixedQuestion.type === 'true_false' && 
+                    (!fixedQuestion.options || !Array.isArray(fixedQuestion.options) || fixedQuestion.options.length === 0)) {
+                    
+                    fixedQuestion.options = [
+                        currentLang === 'ru' ? "Верно" : "Дұрыс", 
+                        currentLang === 'ru' ? "Неверно" : "Қате"
+                    ];
+                }
+                
+                if (fixedQuestion.correct_answer !== undefined && fixedQuestion.correctAnswer === undefined) {
+                    fixedQuestion.correctAnswer = fixedQuestion.correct_answer;
+                }
+                
+                return fixedQuestion;
+            });
+        }
+
+        function canProceedToNext() {
+            const q = state.currentCourse.microlearning.textQuiz[state.currentQuestionIndex];
+            
+            if (q.type === 'multiple_choice' || q.type === 'true_false') {
+                return state.quizAnswers[state.currentQuestionIndex] !== undefined;
+            }
+            
+            if (q.type === 'short_answer') {
+                return state.quizAnswers[state.currentQuestionIndex] && 
+                       state.quizAnswers[state.currentQuestionIndex].trim().length > 0;
+            }
+            
+            return true;
+        }
+
+        function updateShortAnswer(questionIndex, value) {
+            state.quizAnswers[questionIndex] = value;
+            // Не вызываем render() чтобы не терять фокус при вводе
+        }
+
+        async function checkShortAnswer() {
+            const currentQ = state.currentCourse.microlearning.textQuiz[state.currentQuestionIndex];
+            const userAnswer = state.quizAnswers[state.currentQuestionIndex];
+            
+            if (!userAnswer || userAnswer.trim().length === 0) {
+                alert(currentLang === 'ru' ? 'Пожалуйста, введите ответ' : 'Жауапты енгізіңіз');
+                return;
+            }
+            
+            state.checkingShortAnswer = true;
+            render();
+            
+            try {
+                const response = await fetch('/api/check-short-answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: currentQ.question,
+                        user_answer: userAnswer,
+                        expected_answer: currentQ.expectedAnswer || currentQ.expected_answer || '',
+                        language: currentLang
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка при проверке ответа');
+                }
+                
+                const result = await response.json();
+                
+                state.aiCheckResults[state.currentQuestionIndex] = {
+                    isCorrect: result.is_correct,
+                    feedback: result.feedback,
+                    score: result.score
+                };
+                
+                state.checkingShortAnswer = false;
+                render();
+                
+            } catch (error) {
+                console.error('Ошибка проверки:', error);
+                alert(currentLang === 'ru' 
+                    ? 'Произошла ошибка при проверке ответа. Попробуйте еще раз.' 
+                    : 'Жауапты тексеру кезінде қате орын алды. Қайтадан көріңіз.');
+                state.checkingShortAnswer = false;
+                render();
+            }
+        }
+
+        // ==================== ПРАКТИЧЕСКИЕ ЗАДАНИЯ ====================
+        function updatePracticalCode(value) {
+            state.practicalCode = value;
+        }
+
+        function nextPractical() {
+            const tasks = state.currentCourse.microlearning.practicalQuiz;
+            if (state.currentQuestionIndex < tasks.length - 1) {
+                state.currentQuestionIndex++;
+                state.practicalCode = '';
+                state.practicalOutput = '';
+                state.practicalCheckResult = null;
+                state.checkingAnswer = false;
+                render();
+            }
+        }
+
+        function prevPractical() {
+            if (state.currentQuestionIndex > 0) {
+                state.currentQuestionIndex--;
+                state.practicalCode = '';
+                state.practicalOutput = '';
+                state.practicalCheckResult = null;
+                state.checkingAnswer = false;
+                render();
+            }
+        }
+
+        function checkPracticalAnswer() {
+            console.log('Проверка ответа начата');
+            const task = state.currentCourse.microlearning.practicalQuiz[state.currentQuestionIndex];
+            const userAnswer = state.practicalCode || '';
+            
+            console.log('Ответ пользователя:', userAnswer);
+            
+            if (!userAnswer.trim()) {
+                alert(currentLang === 'ru' ? 'Пожалуйста, введите ваш ответ' : 'Жауабыңызды енгізіңіз');
+                return;
+            }
+            
+            state.checkingAnswer = true;
+            render();
+            
+            const endpoint = task.type === 'code' ? '/api/check-code' : '/api/check-practical-answer';
+            const requestBody = task.type === 'code' ? {
+                user_code: userAnswer,
+                task: task.task,
+                language: task.language || 'python',
+                expected_output: task.solution || ''
+            } : {
+                task: task.task,
+                instructions: task.instructions || '',
+                user_answer: userAnswer
+            };
+            
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => {
+                console.log('Ответ получен:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Данные:', data);
+                state.checkingAnswer = false;
+                
+                if (data.success) {
+                    if (task.type === 'code') {
+                        state.practicalCheckResult = {
+                            isCorrect: data.result.correct,
+                            feedback: data.result.feedback,
+                            errors: data.result.errors || [],
+                            suggestions: data.result.suggestions || [],
+                            result_preview: data.result.result_preview || ''
+                        };
+                    } else {
+                        state.practicalCheckResult = {
+                            isCorrect: data.is_correct,
+                            feedback: data.feedback
+                        };
+                    }
+                    console.log('Результат проверки:', state.practicalCheckResult.isCorrect);
+                    
+                    if (state.practicalCheckResult.isCorrect) {
+                        markTaskCompleted('practicalQuiz', state.currentQuestionIndex);
+                    }
+                } else {
+                    state.practicalCheckResult = {
+                        isCorrect: false,
+                        feedback: (currentLang === 'ru' ? 'Ошибка проверки: ' : 'Тексеру қатесі: ') + data.error
+                    };
+                    console.error('Ошибка проверки:', data.error);
+                }
+                
+                render();
+            })
+            .catch(error => {
+                console.error('Ошибка запроса:', error);
+                state.checkingAnswer = false;
+                state.practicalCheckResult = {
+                    isCorrect: false,
+                    feedback: (currentLang === 'ru' ? 'Ошибка связи с сервером: ' : 'Сервермен байланыс қатесі: ') + error.message
+                };
+                render();
+            });
+        }
+
+        function runCode() {
+            const task = state.currentCourse.microlearning.practicalQuiz[state.currentQuestionIndex];
+            const code = state.practicalCode || task.initialCode;
+            
+            try {
+                const existingOutput = document.querySelector('.code-output');
+                if (existingOutput) {
+                    existingOutput.remove();
+                }
+                
+                if (code.includes('<!DOCTYPE') || code.includes('<html') || code.includes('<body')) {
+                    const iframe = document.createElement('iframe');
+                    iframe.style.width = '100%';
+                    iframe.style.height = '500px';
+                    iframe.style.border = '2px solid #e2e8f0';
+                    iframe.style.borderRadius = '12px';
+                    iframe.style.marginTop = '24px';
+                    iframe.style.marginBottom = '24px';
+                    iframe.style.background = 'white';
+                    iframe.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                    
+                    const header = document.createElement('div');
+                    header.style.marginTop = '24px';
+                    header.style.marginBottom = '12px';
+                    header.style.display = 'flex';
+                    header.style.alignItems = 'center';
+                    header.style.gap = '8px';
+                    header.innerHTML = `<span style="font-weight: 600; color: #2d3748; font-size: 14px;">${currentLang === 'ru' ? 'Результат:' : 'Нәтиже:'}</span><span style="color: #10b981; font-size: 14px;">✓ ${currentLang === 'ru' ? 'HTML страница отображена' : 'HTML беті көрсетілді'}</span>`;
+                    
+                    const outputContainer = document.createElement('div');
+                    outputContainer.className = 'code-output';
+                    outputContainer.appendChild(header);
+                    outputContainer.appendChild(iframe);
+                    
+                    const runButton = document.querySelector('button[onclick="runCode()"]');
+                    if (runButton) {
+                        runButton.parentNode.insertBefore(outputContainer, runButton.nextSibling);
+                    }
+                    
+                    setTimeout(() => {
+                        try {
+                            iframe.contentDocument.open();
+                            iframe.contentDocument.write(code);
+                            iframe.contentDocument.close();
+                        } catch (error) {
+                            header.innerHTML = `<span style="font-weight: 600; color: #2d3748; font-size: 14px;">${currentLang === 'ru' ? 'Результат:' : 'Нәтиже:'}</span><span style="color: #ef4444; font-size: 14px;">✗ ${currentLang === 'ru' ? 'Ошибка: ' : 'Қате: '}${error.message}</span>`;
+                        }
+                    }, 100);
+                    
+                    return;
+                } else {
+                    const result = eval(code);
+                    state.practicalOutput = `${currentLang === 'ru' ? 'Результат: ' : 'Нәтиже: '}${result !== undefined ? result : (currentLang === 'ru' ? 'Код выполнен успешно' : 'Код сәтті орындалды')}`;
+                }
+            } catch (error) {
+                state.practicalOutput = `${currentLang === 'ru' ? 'Ошибка: ' : 'Қате: '}${error.message}`;
+            }
+            
+            render();
+        }
+
+        // ==================== РЕНДЕРИНГ ====================
+        function render() {
+            const app = document.getElementById('app');
+            if (!app) return;
+            
+            try {
+                switch(state.step) {
+                    case 'upload':
+                        app.innerHTML = renderUpload();
+                        break;
+                    case 'main':
+                        app.innerHTML = renderMainPage();
+                        break;
+                    case 'generating':
+                        app.innerHTML = renderGenerating();
+                        break;
+                    case 'learning':
+                        app.innerHTML = renderLearning();
+                        break;
+                    default:
+                        app.innerHTML = renderUpload();
+                }
+            } catch (error) {
+                console.error('Render error:', error);
+                app.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center p-8">
+                        <div class="glass-card p-8 text-center">
+                            <h1 class="text-2xl text-red-600 mb-4">${currentLang === 'ru' ? 'Ошибка отображения' : 'Көрсету қатесі'}</h1>
+                            <p class="text-gray-600 mb-4">${error.message}</p>
+                            <button class="btn-primary" onclick="backToHome()">${t('back')}</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderUpload() {
+            return `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="max-w-2xl w-full fade-in">
+                        <div class="glass-card p-8">
+                            <div class="text-center mb-8">
+                                <h1 class="text-4xl font-bold mb-2" style="color: #3559D5;">${t('createCourse')}</h1>
+                                <p class="text-gray-600">${t('uploadDescription')}</p>
+                            </div>
+
+                            <div class="mb-6">
+                                <div class="upload-zone" onclick="document.getElementById('pdf-input').click()">
+                                    <div class="icon-large">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold mb-2 text-gray-800">${t('uploadPdf')}</h3>
+                                    <p class="text-gray-500 mb-4">${t('clickOrDrag')}</p>
+                                    <p id="file-name" class="text-sm text-gray-400">${t('fileNotSelected')}</p>
+                                    <input type="file" id="pdf-input" accept=".pdf" 
+                                           onchange="handleFileSelect(event)" class="hidden">
+                                </div>
+                            </div>
+
+                            <button id="generate-btn" onclick="generateMicrolearning()" 
+                                    disabled class="btn-primary w-full text-lg py-4">
+                                <i class="fas fa-robot mr-2"></i>${t('createMicrolearning')}
+                            </button>
+
+                            <!-- Кнопка перехода на главную страницу -->
+                            <div class="text-center mt-6">
+                                <button onclick="showMainPage()" class="btn-secondary">
+                                    <i class="fas fa-book mr-2"></i>${t('toMainPage')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMainPage() {
+            return `
+                <div class="min-h-screen p-6">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="glass-card p-8 mb-8">
+                            <div class="flex justify-between items-center">
+                                <h1 class="text-3xl font-bold text-gray-800">${t('myCourses')}</h1>
+                                <button onclick="backToHome()" class="btn-primary">
+                                    <i class="fas fa-plus mr-2"></i>${t('createNewCourse')}
+                                </button>
+                            </div>
+                        </div>
+
+                        ${state.courses.length === 0 ? `
+                            <div class="glass-card p-12 text-center">
+                                <div class="icon-large text-gray-400 mb-4">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold mb-4 text-gray-600">${t('noCourses')}</h2>
+                                <p class="text-gray-500 mb-6">${t('uploadDescription')}</p>
+                                <button onclick="backToHome()" class="btn-primary">
+                                    <i class="fas fa-plus mr-2"></i>${t('createNewCourse')}
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${state.courses.map(course => `
+                                    <div class="glass-card p-6 fade-in">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <h3 class="text-xl font-bold text-gray-800 truncate">${course.title}</h3>
+                                            <button onclick="deleteCourse(${course.id})" class="text-red-500 hover:text-red-700">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <p class="text-gray-600 text-sm mb-4">
+                                            ${t('created')}: ${new Date(course.createdAt).toLocaleDateString()}
+                                        </p>
+                                        <div class="flex justify-between items-center">
+                                            <button onclick="loadCourse(${course.id})" class="btn-primary">
+                                                ${t('continueLearning')}
+                                            </button>
+                                            <div class="text-sm text-gray-500">
+                                                ${Object.values(course.completedModules).filter(v => v).length}/4 ${t('modules')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderGenerating() {
+            return `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="glass-card p-12 text-center max-w-md fade-in">
+                        <div class="spinner mx-auto mb-6"></div>
+                        <h2 class="text-2xl font-bold mb-4 text-gray-800">${t('generatingCourse')}</h2>
+                        <p class="text-gray-600">${t('analyzingMaterial')}</p>
+                        <p class="text-sm text-gray-500 mt-4">${t('mayTakeTime')}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLearning() {
+            const course = state.currentCourse;
+            const completed = Object.values(state.completedModules).filter(v => v).length;
+            const progress = (completed / 4) * 100;
+
+            return `
+                <div class="min-h-screen bg-gray-50">
+                    <div class="max-w-7xl mx-auto p-6">
+                        <!-- Header -->
+                        <div class="glass-card p-6 mb-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <button onclick="showMainPage()" class="btn-secondary mr-4">
+                                        <i class="fas fa-arrow-left mr-2"></i>${t('back')}
+                                    </button>
+                                    <div>
+                                        <h1 class="text-2xl font-bold text-gray-800">${course.title}</h1>
+                                        <p class="text-gray-600">${t('progress')}: ${completed}/4 ${t('modules')}</p>
+                                    </div>
+                                </div>
+                                <div class="w-48">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: ${progress}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                            <!-- Sidebar -->
+                            <div class="lg:col-span-1">
+                                <div class="glass-card p-6">
+                                    <h3 class="text-lg font-semibold mb-4 text-gray-800">${t('courseModules')}</h3>
+                                    <div class="space-y-3">
+                                        ${renderSidebarItem('theory', 'book', t('theory'), `${course.microlearning.theory.length} ${t('pages')}`)}
+                                        ${renderSidebarItem('flashcards', 'layer-group', t('flashcards'), `${course.microlearning.flashcards.length} ${t('cards')}`)}
+                                        ${renderSidebarItem('textQuiz', 'question-circle', t('tests'), `${course.microlearning.textQuiz.length} ${t('tasks')}`)}
+                                        ${renderSidebarItem('practicalQuiz', 'code', t('practice'), `${course.microlearning.practicalQuiz.length} ${t('tasks')}`)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="lg:col-span-3">
+                                <div class="glass-card p-8">
+                                    ${renderModuleContent()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSidebarItem(id, icon, title, subtitle) {
+            const isActive = state.currentModule === id;
+            const isCompleted = state.completedModules[id];
+            const classes = `sidebar-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`;
+            
+            return `
+                <div onclick="openModule('${id}')" class="${classes}">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl w-6 text-center">
+                            <i class="fas fa-${icon}"></i>
+                        </span>
+                        <div class="flex-1">
+                            <div class="font-medium">${title}</div>
+                            <div class="text-xs opacity-70">${subtitle}</div>
+                        </div>
+                        ${isCompleted ? '<i class="fas fa-check text-green-500"></i>' : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderModuleContent() {
+            if (!state.currentCourse || !state.currentModule) {
+                return '<p class="text-center text-gray-600">Выберите модуль для начала обучения</p>';
+            }
+
+            const module = state.currentCourse.microlearning[state.currentModule];
+            if (!module || module.length === 0) {
+                return '<p class="text-center text-gray-600">Модуль пуст</p>';
+            }
+
+            switch(state.currentModule) {
+                case 'theory': 
+                    return renderTheory();
+                case 'flashcards': 
+                    return renderFlashcards();
+                case 'textQuiz': 
+                    return state.quizResults ? renderQuizResults() : renderTextQuiz();
+                case 'practicalQuiz': 
+                    return renderPractical();
+                default: 
+                    return '<p class="text-center text-gray-600">Модуль в разработке</p>';
+            }
+        }
+
+        function renderTheory() {
+            const pages = state.currentCourse.microlearning.theory;
+            const page = pages[state.currentTheoryPage];
+            const allPagesViewed = isAllPagesViewed('theory');
+            
+            markPageViewed('theory', state.currentTheoryPage);
+
+            if (!page) {
+                return '<p class="text-center text-gray-600">Страница не найдена</p>';
+            }
+
+            // Обрабатываем контент для красивого отображения
+            const processedContent = processTheoryContent(page.content);
+
+            // Инициализируем подсветку синтаксиса после рендеринга
+            setTimeout(() => {
+                document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            }, 100);
+
+            return `
+                <div class="max-w-4xl mx-auto fade-in">
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2 text-gray-800">${page.title}</h1>
+                            <p class="text-gray-600">${t('page')} ${state.currentTheoryPage + 1} ${t('of')} ${pages.length}</p>
+                        </div>
+                        <button onclick="completeModule()" 
+                                class="btn-primary ${!allPagesViewed ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${!allPagesViewed ? 'disabled' : ''}
+                                title="${!allPagesViewed ? (currentLang === 'ru' ? 'Просмотрите все страницы перед завершением модуля' : 'Модульді аяқтамас бұрын барлық беттерді қараңыз') : ''}">
+                            <i class="fas fa-check mr-2"></i>${t('completeModule')}
+                        </button>
+                    </div>
+
+                    <div class="page-indicator">
+                        ${pages.map((_, i) => 
+                            `<div class="page-dot ${i === state.currentTheoryPage ? 'active' : ''}"></div>`
+                        ).join('')}
+                    </div>
+
+                    <div class="theory-content mb-8">
+                        ${processedContent}
+                    </div>
+
+                    <div class="nav-container">
+                        <button onclick="prevTheoryPage()" 
+                                class="btn-secondary ${state.currentTheoryPage === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${state.currentTheoryPage === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-chevron-left mr-2"></i>${t('previous')}
+                        </button>
+                        
+                        <span class="text-gray-600">${state.currentTheoryPage + 1} / ${pages.length}</span>
+                        
+                        <button onclick="nextTheoryPage()" 
+                                class="btn-secondary ${state.currentTheoryPage === pages.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${state.currentTheoryPage === pages.length - 1 ? 'disabled' : ''}>
+                            ${t('next')}<i class="fas fa-chevron-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFlashcards() {
+            const cards = state.currentCourse.microlearning.flashcards;
+            const card = cards[state.currentCardIndex];
+            const progress = ((state.currentCardIndex + 1) / cards.length) * 100;
+            const allCardsViewed = isAllPagesViewed('flashcards');
+            
+            markPageViewed('flashcards', state.currentCardIndex);
+
+            if (!card) {
+                return '<p class="text-center text-gray-600">Карточка не найдена</p>';
+            }
+
+            return `
+                <div class="max-w-2xl mx-auto fade-in">
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2 text-gray-800">${t('flashcards')}</h1>
+                            <p class="text-gray-600">${t('cards')} ${state.currentCardIndex + 1} ${t('of')} ${cards.length}</p>
+                        </div>
+                        <button onclick="completeModule()" 
+                                class="btn-primary ${!allCardsViewed ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${!allCardsViewed ? 'disabled' : ''}
+                                title="${!allCardsViewed ? (currentLang === 'ru' ? 'Просмотрите все карточки перед завершением модуля' : 'Модульді аяқтамас бұрын барлық карталарды қараңыз') : ''}">
+                            <i class="fas fa-check mr-2"></i>${t('completeModule')}
+                        </button>
+                    </div>
+
+                    <div class="progress-bar mb-8">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+
+                    <div class="flashcard mb-8" onclick="flipCard()">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <div class="text-center">
+                                    <div class="text-4xl font-bold mb-6 text-blue-500">
+                                        <i class="fas fa-layer-group"></i>
+                                    </div>
+                                    <h2 class="text-2xl font-semibold text-gray-800">${card.front}</h2>
+                                    <p class="text-sm text-gray-500 mt-6">${t('flipCard')}</p>
+                                </div>
+                            </div>
+                            <div class="flashcard-back">
+                                <div class="text-center">
+                                    <p class="text-xl font-semibold">${card.back}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-container">
+                        <button onclick="prevCard()" 
+                                class="btn-secondary ${state.currentCardIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${state.currentCardIndex === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-chevron-left mr-2"></i>${t('previous')}
+                        </button>
+                        
+                        <span class="text-gray-600">${state.currentCardIndex + 1} / ${cards.length}</span>
+                        
+                        <button onclick="nextCard()" 
+                                class="btn-secondary ${state.currentCardIndex === cards.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${state.currentCardIndex === cards.length - 1 ? 'disabled' : ''}>
+                            ${t('next')}<i class="fas fa-chevron-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTextQuiz() {
+            const questions = state.currentCourse.microlearning.textQuiz;
+            const q = questions[state.currentQuestionIndex];
+            const progress = ((state.currentQuestionIndex + 1) / questions.length) * 100;
+            const isLast = state.currentQuestionIndex === questions.length - 1;
+            const isLocked = state.lockedQuestions.has(state.currentQuestionIndex);
+
+            if (!q) {
+                return '<p class="text-center text-gray-600">Вопрос не найден</p>';
+            }
+
+            // Проверяем наличие options для multiple_choice вопросов
+            if (q.type === 'multiple_choice' && (!q.options || !Array.isArray(q.options) || q.options.length === 0)) {
+                console.error('❌ Отсутствуют варианты ответов для вопроса:', state.currentQuestionIndex, q);
+                
+                q.options = [
+                    currentLang === 'ru' ? "Да, это верно" : "Ия, бұл дұрыс",
+                    currentLang === 'ru' ? "Нет, это неверно" : "Жоқ, бұл дұрыс емес", 
+                    currentLang === 'ru' ? "Частично верно" : "Ішінара дұрыс",
+                    currentLang === 'ru' ? "Затрудняюсь ответить" : "Жауап беру қиын"
+                ];
+                
+                if (q.correctAnswer === undefined && q.correct_answer === undefined) {
+                    q.correctAnswer = 0;
+                }
+            }
+
+            // Для true_false вопросов создаем стандартные варианты
+            if (q.type === 'true_false' && (!q.options || !Array.isArray(q.options) || q.options.length === 0)) {
+                q.options = [
+                    currentLang === 'ru' ? "Верно" : "Дұрыс", 
+                    currentLang === 'ru' ? "Неверно" : "Қате"
+                ];
+            }
+
+            return `
+                <div class="max-w-3xl mx-auto fade-in">
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-bold mb-2 text-gray-800">${t('testTasks')}</h1>
+                        <p class="text-gray-600">${t('question')} ${state.currentQuestionIndex + 1} ${t('of')} ${questions.length}</p>
+                        ${questions.length >= 10 ? `<p class="text-sm text-green-600 mt-1"><i class="fas fa-check-circle mr-1"></i>${currentLang === 'ru' ? 'Достаточное количество вопросов' : 'Жеткілікті сұрақтар саны'}</p>` : ''}
+                    </div>
+
+                    <div class="progress-bar mb-8">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold mb-6 text-gray-800">${q.question || (currentLang === 'ru' ? 'Вопрос не указан' : 'Сұрақ көрсетілмеген')}</h2>
+
+                        ${q.type === 'multiple_choice' ? `
+                            <div class="space-y-4">
+                                ${q.options.map((opt, i) => {
+                                    const isSelected = state.quizAnswers[state.currentQuestionIndex] === i;
+                                    const isLockedClass = isLocked ? 'locked' : '';
+                                    const selectedClass = isSelected ? 'selected' : '';
+                                    return `
+                                        <div onclick="selectAnswer(${state.currentQuestionIndex}, ${i})" 
+                                             class="quiz-option ${selectedClass} ${isLockedClass}">
+                                                <div class="flex items-center gap-4">
+                                                    <div class="w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold ${
+                                                        isSelected ? 
+                                                        'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 text-gray-600'
+                                                    }">
+                                                        ${String.fromCharCode(65 + i)}
+                                                    </div>
+                                                    <span class="text-gray-800">${opt}</span>
+                                                </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : q.type === 'true_false' ? `
+                            <div class="space-y-4">
+                                <div onclick="selectAnswer(${state.currentQuestionIndex}, 0)" 
+                                     class="quiz-option ${state.quizAnswers[state.currentQuestionIndex] === 0 ? 'selected' : ''} ${isLocked ? 'locked' : ''}">
+                                    <div class="flex items-center gap-4">
+                                        <i class="fas fa-check text-green-500 text-xl"></i>
+                                        <span class="text-lg font-semibold text-gray-800">${currentLang === 'ru' ? 'Верно' : 'Дұрыс'}</span>
+                                    </div>
+                                </div>
+                                <div onclick="selectAnswer(${state.currentQuestionIndex}, 1)" 
+                                     class="quiz-option ${state.quizAnswers[state.currentQuestionIndex] === 1 ? 'selected' : ''} ${isLocked ? 'locked' : ''}">
+                                    <div class="flex items-center gap-4">
+                                        <i class="fas fa-times text-red-500 text-xl"></i>
+                                        <span class="text-lg font-semibold text-gray-800">${currentLang === 'ru' ? 'Неверно' : 'Қате'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : q.type === 'short_answer' ? `
+                            <div class="space-y-4">
+                                <textarea 
+                                    oninput="updateShortAnswer(${state.currentQuestionIndex}, this.value)"
+                                    placeholder="${currentLang === 'ru' ? 'Введите ваш ответ здесь...' : 'Жауабыңызды осы жерге енгізіңіз...'}"
+                                    class="w-full border border-gray-300 rounded-xl p-4 resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors"
+                                    rows="4"
+                                    ${isLocked ? 'disabled' : ''}
+                                >${state.quizAnswers[state.currentQuestionIndex] || ''}</textarea>
+                                
+                                ${!isLocked && !state.aiCheckResults[state.currentQuestionIndex] ? `
+                                    <button onclick="checkShortAnswer()" 
+                                            class="btn-primary ${state.checkingShortAnswer || !canProceedToNext() ? 'opacity-50 cursor-not-allowed' : ''}"
+                                            ${state.checkingShortAnswer || !canProceedToNext() ? 'disabled' : ''}>
+                                        ${state.checkingShortAnswer ? 
+                                            `<i class="fas fa-spinner fa-spin mr-2"></i>${currentLang === 'ru' ? 'Проверяю...' : 'Тексерілуде...'}` :
+                                            `<i class="fas fa-check-circle mr-2"></i>${currentLang === 'ru' ? 'Проверить ответ' : 'Жауапты тексеру'}`
+                                        }
+                                    </button>
+                                ` : ''}
+                                
+                                ${state.aiCheckResults[state.currentQuestionIndex] ? `
+                                    <div class="border rounded-xl p-4 ${state.aiCheckResults[state.currentQuestionIndex].isCorrect ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}">
+                                        <div class="flex items-start gap-3 mb-3">
+                                            <div class="text-2xl ${state.aiCheckResults[state.currentQuestionIndex].isCorrect ? 'text-green-500' : 'text-orange-500'}">
+                                                <i class="fas fa-${state.aiCheckResults[state.currentQuestionIndex].isCorrect ? 'check-circle' : 'info-circle'}"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <h3 class="font-semibold mb-2 ${state.aiCheckResults[state.currentQuestionIndex].isCorrect ? 'text-green-700' : 'text-orange-700'}">
+                                                    ${currentLang === 'ru' ? 'Результат проверки' : 'Тексеру нәтижесі'} 
+                                                    ${state.aiCheckResults[state.currentQuestionIndex].score ? `(${state.aiCheckResults[state.currentQuestionIndex].score}/10)` : ''}
+                                                </h3>
+                                                <p class="text-gray-700 whitespace-pre-wrap">${state.aiCheckResults[state.currentQuestionIndex].feedback}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${state.checkingShortAnswer ? `
+                                    <div class="flex items-center justify-center gap-3 p-4 bg-blue-50 rounded-xl">
+                                        <div class="small-spinner"></div>
+                                        <p class="text-blue-700">${currentLang === 'ru' ? 'ИИ проверяет ваш ответ...' : 'AI жауабыңызды тексеруде...'}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : `
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 text-xl mb-2"></i>
+                                <p class="text-yellow-700">${currentLang === 'ru' ? 'Тип вопроса "' : 'Сұрақ түрі "'}${q.type}" ${currentLang === 'ru' ? 'пока не поддерживается' : 'әлі қолдау көрсетілмейді'}</p>
+                            </div>
+                        `}
+                    </div>
+
+                    <div class="nav-container">
+                        <button onclick="prevQuestion()" 
+                                class="btn-secondary ${state.currentQuestionIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${state.currentQuestionIndex === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-chevron-left mr-2"></i>${t('previous')}
+                        </button>
+                        
+                        <span class="text-gray-600">${state.currentQuestionIndex + 1} / ${questions.length}</span>
+                        
+                        <button onclick="${isLast ? 'submitTextQuiz()' : 'nextQuestion()'}" 
+                                class="${isLast ? 'btn-primary' : 'btn-secondary'} ${!canProceedToNext() ? 'opacity-50 cursor-not-allowed' : ''}"
+                                ${!canProceedToNext() ? 'disabled' : ''}>
+                            ${isLast ? `<i class="fas fa-check mr-2"></i>${t('submitTest')}` : `${t('next')}<i class="fas fa-chevron-right ml-2"></i>`}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderQuizResults() {
+            const results = state.quizResults;
+            const correct = results.filter(r => r.isCorrect).length;
+            const percentage = Math.round((correct / results.length) * 100);
+
+            return `
+                <div class="max-w-3xl mx-auto fade-in">
+                    <div class="text-center mb-8">
+                        <div class="icon-large ${percentage >= 70 ? 'text-green-500' : 'text-orange-500'}">
+                            <i class="fas fa-${percentage >= 70 ? 'trophy' : 'redo'}"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold mb-2 text-gray-800">${t('testResults')}</h2>
+                        <p class="text-2xl mb-4 ${percentage >= 70 ? 'text-green-600' : 'text-orange-600'}">
+                            ${correct} ${t('of')} ${results.length} (${percentage}%)
+                        </p>
+                        <p class="text-gray-600">${percentage >= 70 ? t('excellent') : t('tryAgain')}</p>
+                    </div>
+
+                    <div class="space-y-4 mb-8">
+                        ${results.map((r, i) => `
+                            <div class="border rounded-xl p-6 ${r.isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}">
+                                <div class="flex items-start gap-4">
+                                    <div class="text-2xl mt-1 ${r.isCorrect ? 'text-green-500' : 'text-red-500'}">
+                                        <i class="fas fa-${r.isCorrect ? 'check' : 'times'}"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-semibold mb-2 text-gray-800">${i + 1}. ${r.question}</h3>
+                                        ${r.type === 'multiple_choice' ? `
+                                            <p class="text-gray-600 mb-2">
+                                                ${t('yourAnswer')}: <span class="${r.isCorrect ? 'text-green-600' : 'text-red-600'} font-medium">${r.options[r.userAnswer]}</span>
+                                                ${!r.isCorrect ? `<br>${t('correctAnswer')}: <span class="text-green-600 font-medium">${r.options[r.correctAnswer]}</span>` : ''}
+                                            </p>
+                                        ` : r.type === 'true_false' ? `
+                                            <p class="text-gray-600 mb-2">
+                                                ${t('yourAnswer')}: <span class="${r.isCorrect ? 'text-green-600' : 'text-red-600'} font-medium">${r.userAnswer === 0 ? (currentLang === 'ru' ? 'Верно' : 'Дұрыс') : (currentLang === 'ru' ? 'Неверно' : 'Қате')}</span>
+                                                ${!r.isCorrect ? `<br>${t('correctAnswer')}: <span class="text-green-600 font-medium">${r.correctAnswer ? (currentLang === 'ru' ? 'Верно' : 'Дұрыс') : (currentLang === 'ru' ? 'Неверно' : 'Қате')}</span>` : ''}
+                                            </p>
+                                        ` : ''}
+                                        <p class="text-sm text-gray-600 bg-white p-3 rounded-lg">${r.explanation}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="text-center">
+                        <button onclick="openModule('textQuiz')" class="btn-secondary mr-4">
+                            <i class="fas fa-redo mr-2"></i>${t('retakeTest')}
+                        </button>
+                        <button onclick="completeModule()" class="btn-primary">
+                            <i class="fas fa-check mr-2"></i>${t('completeModule')}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPractical() {
+            const tasks = state.currentCourse.microlearning.practicalQuiz;
+            const task = tasks[state.currentQuestionIndex];
+            const isLast = state.currentQuestionIndex === tasks.length - 1;
+
+            if (!task) {
+                return '<p class="text-center text-gray-600">Задание не найдено</p>';
+            }
+
+            if (task.type === 'code') {
+                const code = state.practicalCode || task.initialCode;
+                const canRunHTML = task.language === 'html' || task.language === 'css' || task.language === 'javascript';
+                const allTasksCompleted = isAllTasksCompleted('practicalQuiz');
+                
+                return `
+                    <div class="max-w-4xl mx-auto fade-in">
+                        <div class="mb-8">
+                            <h1 class="text-3xl font-bold mb-2 text-gray-800">${t('practicalTask')}</h1>
+                            <p class="text-gray-600">${t('task')} ${state.currentQuestionIndex + 1} ${t('of')} ${tasks.length}</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-800">${task.task}</h2>
+                            
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium mb-3 text-gray-700">${t('codeEditor')} (${task.language || 'python'}):</label>
+                                <textarea class="code-editor" rows="12" 
+                                          oninput="updatePracticalCode(this.value)">${code}</textarea>
+                            </div>
+
+                            <div class="flex gap-3 mb-6">
+                                ${canRunHTML ? `
+                                    <button onclick="runCode()" class="btn-secondary">
+                                        <i class="fas fa-play mr-2"></i>${t('runCode')}
+                                    </button>
+                                ` : ''}
+                                <button onclick="checkPracticalAnswer()" class="btn-primary ${state.checkingAnswer ? 'opacity-70 cursor-wait' : ''}" ${state.checkingAnswer ? 'disabled' : ''}>
+                                    <i class="fas fa-check mr-2"></i>${state.checkingAnswer ? t('checking') : t('checkCode')}
+                                </button>
+                            </div>
+
+                            ${state.checkingAnswer ? `
+                                <div class="loading-indicator mb-6">
+                                    <div class="small-spinner"></div>
+                                    <p class="text-gray-600">${t('aiChecking')}</p>
+                                </div>
+                            ` : ''}
+
+                            ${state.practicalCheckResult ? `
+                                <div class="mb-6 p-6 rounded-xl ${state.practicalCheckResult.isCorrect ? 'bg-green-50 border-2 border-green-500' : 'bg-red-50 border-2 border-red-500'}">
+                                    <div class="flex items-start gap-3 mb-4">
+                                        <div class="text-3xl ${state.practicalCheckResult.isCorrect ? 'text-green-500' : 'text-red-500'}">
+                                            <i class="fas fa-${state.practicalCheckResult.isCorrect ? 'check-circle' : 'times-circle'}"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="text-xl font-bold mb-3 ${state.practicalCheckResult.isCorrect ? 'text-green-800' : 'text-red-800'}">
+                                                ${state.practicalCheckResult.isCorrect ? t('greatCodeCorrect') : t('needsImprovement')}
+                                            </h3>
+                                            <p class="text-base ${state.practicalCheckResult.isCorrect ? 'text-green-700' : 'text-red-700'} mb-3">${state.practicalCheckResult.feedback}</p>
+                                            
+                                            ${state.practicalCheckResult.errors && state.practicalCheckResult.errors.length > 0 ? `
+                                                <div class="mt-4 p-4 bg-white rounded-lg border border-red-300">
+                                                    <p class="font-semibold text-red-800 mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>${t('errorsFound')}:</p>
+                                                    <ul class="list-disc list-inside text-red-700 space-y-1">
+                                                        ${state.practicalCheckResult.errors.map(err => `<li>${err}</li>`).join('')}
+                                                    </ul>
+                                                </div>
+                                            ` : ''}
+                                            
+                                            ${state.practicalCheckResult.suggestions && state.practicalCheckResult.suggestions.length > 0 ? `
+                                                <div class="mt-4 p-4 bg-white rounded-lg border ${state.practicalCheckResult.isCorrect ? 'border-green-300' : 'border-yellow-300'}">
+                                                    <p class="font-semibold ${state.practicalCheckResult.isCorrect ? 'text-green-800' : 'text-yellow-800'} mb-2"><i class="fas fa-lightbulb mr-2"></i>${t('suggestions')}:</p>
+                                                    <ul class="list-disc list-inside ${state.practicalCheckResult.isCorrect ? 'text-green-700' : 'text-yellow-700'} space-y-1">
+                                                        ${state.practicalCheckResult.suggestions.map(sug => `<li>${sug}</li>`).join('')}
+                                                    </ul>
+                                                </div>
+                                            ` : ''}
+                                            
+                                            ${state.practicalCheckResult.result_preview ? `
+                                                <div class="mt-4 p-4 bg-white rounded-lg border border-green-300">
+                                                    <p class="font-semibold text-green-800 mb-2"><i class="fas fa-eye mr-2"></i>${t('expectedResult')}:</p>
+                                                    <pre class="text-green-700 font-mono text-sm whitespace-pre-wrap">${state.practicalCheckResult.result_preview}</pre>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${state.practicalOutput && !code.includes('<html') && !code.includes('<!DOCTYPE') ? `
+                                <div class="mb-6">
+                                    <label class="block text-sm font-medium mb-3 text-gray-700">${currentLang === 'ru' ? 'Результат выполнения:' : 'Орындау нәтижесі:'}</label>
+                                    <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm whitespace-pre-wrap">${state.practicalOutput}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="nav-container">
+                            <button onclick="prevPractical()" 
+                                    class="btn-secondary ${state.currentQuestionIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                    ${state.currentQuestionIndex === 0 ? 'disabled' : ''}>
+                                <i class="fas fa-chevron-left mr-2"></i>${t('previous')}
+                            </button>
+                            
+                            <span class="text-gray-600">${state.currentQuestionIndex + 1} / ${tasks.length}</span>
+                            
+                            ${!isLast ? `
+                                <button onclick="nextPractical()" class="btn-secondary">
+                                    ${t('next')}<i class="fas fa-chevron-right ml-2"></i>
+                                </button>
+                            ` : `
+                                <button onclick="completeModule()" 
+                                        class="btn-primary ${!allTasksCompleted ? 'opacity-50 cursor-not-allowed' : ''}"
+                                        ${!allTasksCompleted ? 'disabled' : ''}
+                                        title="${!allTasksCompleted ? (currentLang === 'ru' ? 'Выполните все задания перед завершением модуля' : 'Модульді аяқтамас бұрын барлық тапсырмаларды орындаңыз') : ''}">
+                                    <i class="fas fa-check mr-2"></i>${t('completeModule')}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            } else {
+                const canProceed = state.practicalCheckResult?.isCorrect === true;
+                const allTasksCompleted = isAllTasksCompleted('practicalQuiz');
+                
+                return `
+                    <div class="max-w-3xl mx-auto fade-in">
+                        <div class="mb-8">
+                            <h1 class="text-3xl font-bold mb-2 text-gray-800">${t('practicalTask')}</h1>
+                            <p class="text-gray-600">${t('task')} ${state.currentQuestionIndex + 1} ${t('of')} ${tasks.length}</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-800">${task.task}</h2>
+                            
+                            ${task.instructions ? `
+                                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                                    <p class="text-sm font-medium mb-2 text-blue-800"><i class="fas fa-info-circle mr-2"></i>${t('instruction')}:</p>
+                                    <p class="text-blue-700">${task.instructions}</p>
+                                </div>
+                            ` : ''}
+                            
+                            <textarea rows="10" placeholder="${t('writeSolution')}"
+                                      oninput="updatePracticalCode(this.value)"
+                                      class="w-full border border-gray-300 rounded-xl p-4 mb-4 resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-colors ${state.practicalCheckResult?.isCorrect ? 'border-green-500 bg-green-50' : ''}"
+                                      ${canProceed ? 'disabled' : ''}
+                                      >${state.practicalCode || ''}</textarea>
+
+                            ${state.checkingAnswer ? `
+                                <div class="loading-indicator mb-6">
+                                    <div class="small-spinner"></div>
+                                    <p class="text-gray-600">${currentLang === 'ru' ? 'AI проверяет ваш ответ...' : 'AI жауабыңызды тексереді...'}</p>
+                                </div>
+                            ` : ''}
+
+                            ${state.practicalCheckResult ? `
+                                <div class="mb-6 p-4 rounded-xl ${state.practicalCheckResult.isCorrect ? 'bg-green-50 border-2 border-green-500' : 'bg-red-50 border-2 border-red-500'}">
+                                    <div class="flex items-start gap-3">
+                                        <div class="text-2xl ${state.practicalCheckResult.isCorrect ? 'text-green-500' : 'text-red-500'}">
+                                            <i class="fas fa-${state.practicalCheckResult.isCorrect ? 'check-circle' : 'times-circle'}"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold mb-2 ${state.practicalCheckResult.isCorrect ? 'text-green-800' : 'text-red-800'}">
+                                                ${state.practicalCheckResult.isCorrect ? `✓ ${t('correct')}!` : `✗ ${t('incorrect')}`}
+                                            </h3>
+                                            <p class="${state.practicalCheckResult.isCorrect ? 'text-green-700' : 'text-red-700'}">${state.practicalCheckResult.feedback}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${!canProceed && !state.checkingAnswer ? `
+                                <button onclick="checkPracticalAnswer()" class="btn-primary w-full mb-6">
+                                    <i class="fas fa-check mr-2"></i>${t('checkAnswer')}
+                                </button>
+                            ` : ''}
+                        </div>
+
+                        <div class="nav-container">
+                            <button onclick="prevPractical()" 
+                                    class="btn-secondary ${state.currentQuestionIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                    ${state.currentQuestionIndex === 0 ? 'disabled' : ''}>
+                                <i class="fas fa-chevron-left mr-2"></i>${t('previous')}
+                            </button>
+                            
+                            <span class="text-gray-600">${state.currentQuestionIndex + 1} / ${tasks.length}</span>
+                            
+                            ${!isLast ? `
+                                <button onclick="nextPractical()" 
+                                        class="btn-secondary ${!canProceed ? 'opacity-50 cursor-not-allowed' : ''}"
+                                        ${!canProceed ? 'disabled' : ''}>
+                                    ${t('next')}<i class="fas fa-chevron-right ml-2"></i>
+                                </button>
+                            ` : `
+                                <button onclick="completeModule()" 
+                                        class="btn-primary ${!allTasksCompleted ? 'opacity-50 cursor-not-allowed' : ''}"
+                                        ${!allTasksCompleted ? 'disabled' : ''}
+                                        title="${!allTasksCompleted ? (currentLang === 'ru' ? 'Выполните все задания перед завершением модуля' : 'Модульді аяқтамас бұрын барлық тапсырмаларды орындаңыз') : ''}">
+                                    <i class="fas fa-check mr-2"></i>${t('completeModule')}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== ЗАПУСК ПРИЛОЖЕНИЯ ====================
+        
+        // ==================== ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ====================
+        
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            const icon = themeToggle.querySelector('i');
+            
+            body.classList.toggle('dark-theme');
+            
+            // Меняем иконку
+            if (body.classList.contains('dark-theme')) {
+                icon.className = 'fas fa-sun';
+                themeToggle.title = currentLang === 'ru' ? 'Светлая тема' : 'Ашық тақырып';
+                localStorage.setItem('ai-ustaz_theme', 'dark');
+            } else {
+                icon.className = 'fas fa-moon';
+                themeToggle.title = currentLang === 'ru' ? 'Темная тема' : 'Қараңғы тақырып';
+                localStorage.setItem('ai-ustaz_theme', 'light');
+            }
+        }
+        
+        // Загрузка сохраненной темы
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('ai-ustaz_theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                const themeToggle = document.getElementById('theme-toggle');
+                if (themeToggle) {
+                    const icon = themeToggle.querySelector('i');
+                    icon.className = 'fas fa-sun';
+                    themeToggle.title = currentLang === 'ru' ? 'Светлая тема' : 'Ашық тақырып';
+                }
+            }
+        }
+        
+        function switchLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('ai-ustaz_lang', lang);
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`lang-${lang}`).classList.add('active');
+            
+            document.documentElement.lang = lang;
+            
+            // Переключение текста кнопки "На главную"
+            const homeBtn = document.querySelector('.home-btn-text');
+            if (homeBtn) {
+                homeBtn.textContent = homeBtn.getAttribute(`data-${lang}`);
+            }
+            
+            // Перерисовываем интерфейс с новым языком
+            render();
+        }
+        
+        
+        // ==================== ФУНКЦИИ ДЛЯ УЛУЧШЕННОГО ОТОБРАЖЕНИЯ ТЕОРИИ ====================
+        
+        
+        function processTheoryContent(content) {
+            if (!content) return '';
+            
+            // Сначала обработаем блоки кода отдельно
+            const codeBlocks = [];
+            let processedText = content.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
+                codeBlocks.push({ lang: lang || 'text', code: code.trim() });
+                return placeholder;
+            });
+            
+            let paragraphs = processedText.split('\n').filter(p => p.trim());
+            let processedContent = '';
+            let inList = false;
+            let inSection = false; // Флаг для отслеживания открытой секции
+            
+            paragraphs.forEach((para, index) => {
+                para = para.trim();
+                
+                // Проверка на плейсхолдер кода
+                const codeMatch = para.match(/___CODE_BLOCK_(\d+)___/);
+                if (codeMatch) {
+                    if (inList) {
+                        processedContent += '</ul>';
+                        inList = false;
+                    }
+                    const blockIndex = parseInt(codeMatch[1]);
+                    const block = codeBlocks[blockIndex];
+                    processedContent += createCodeBlock(block.code, block.lang);
+                    return;
+                }
+                
+                // Заголовки ## - закрываем предыдущую секцию и открываем новую
+                if (para.match(/^##\s+/)) {
+                    if (inList) {
+                        processedContent += '</ul>';
+                        inList = false;
+                    }
+                    // Закрываем предыдущую секцию
+                    if (inSection) {
+                        processedContent += '</div></div>'; // Закрываем theory-content и theory-section
+                    }
+                    
+                    let text = para.replace(/^##\s+/, '');
+                    
+                    // Извлекаем эмодзи если есть
+                    const emojiMatch = text.match(/^([^\w\sА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүІіҺһ]+)\s+(.+)$/);
+                    if (emojiMatch) {
+                        const emoji = emojiMatch[1];
+                        const title = emojiMatch[2];
+                        processedContent += `
+                            <div class="theory-section">
+                                <div class="theory-header">
+                                    <span class="emoji-header">${emoji}</span>
+                                    <h2 class="theory-title">${title}</h2>
+                                </div>
+                                <div class="theory-content">
+                        `;
+                    } else {
+                        // Определяем иконку по содержанию
+                        const icon = getIconForSection(text);
+                        processedContent += `
+                            <div class="theory-section">
+                                <div class="theory-header">
+                                    <span class="theory-icon"><i class="fas fa-${icon}"></i></span>
+                                    <h2 class="theory-title">${text}</h2>
+                                </div>
+                                <div class="theory-content">
+                        `;
+                    }
+                    inSection = true;
+                }
+                else if (para.match(/^###\s+/)) {
+                    if (inList) {
+                        processedContent += '</ul>';
+                        inList = false;
+                    }
+                    let text = para.replace(/^###\s+/, '');
+                    
+                    // Извлекаем эмодзи если есть
+                    const emojiMatch = text.match(/^([^\w\sА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүІіҺһ]+)\s+(.+)$/);
+                    if (emojiMatch) {
+                        const emoji = emojiMatch[1];
+                        const title = emojiMatch[2];
+                        processedContent += `<h3 style="font-size: 20px; font-weight: 700; color: #2d3748; margin: 20px 0 12px 0; display: flex; align-items: center;"><span style="margin-right: 8px;">${emoji}</span>${title}</h3>`;
+                    } else {
+                        processedContent += `<h3 style="font-size: 20px; font-weight: 700; color: #2d3748; margin: 20px 0 12px 0;">${text}</h3>`;
+                    }
+                }
+                // Информационные блоки
+                else if (para.toLowerCase().includes('қарапайым тілмен:') || 
+                         para.toLowerCase().includes('простыми словами:') ||
+                         para.toLowerCase().includes('что это')) {
+                    if (inList) {
+                        processedContent += '</ul>';
+                        inList = false;
+                    }
+                    const parts = para.split(/[::]/);
+                    const title = parts[0];
+                    const text = parts.slice(1).join(':').trim();
+                    processedContent += `
+                        <div class="info-box">
+                            <span class="info-box-icon">💡</span>
+                            <div>
+                                <strong style="color: #1e40af;">${title}:</strong> ${text}
+                            </div>
+                        </div>
+                    `;
+                }
+                // Важно / Маңызды
+                else if (para.toLowerCase().startsWith('важно:') || 
+                         para.toLowerCase().startsWith('маңызды:') ||
+                         para.toLowerCase().startsWith('внимание:')) {
+                    if (inList) {
+                        processedContent += '</ul>';
+                        inList = false;
+                    }
+                    const text = para.replace(/^(важно:|маңызды:|внимание:)/i, '').trim();
+                    const contentLang = detectContentLanguage(content);
+                    const labelText = contentLang === 'kk' ? 'Маңызды' : 'Важно';
+                    processedContent += `
+                        <div class="warning-box">
+                            <span class="warning-box-icon">⚠️</span>
+                            <div>
+                                <strong style="color: #92400e;">${labelText}:</strong> ${text}
+                            </div>
+                        </div>
+                    `;
+                }
+                // Совет / Кеңес
+                else if (para.toLowerCase().startsWith('совет:') || 
+                         para.toLowerCase().startsWith('кеңес:') ||
+                         para.toLowerCase().startsWith('подсказка:')) {
+                    if (inList) {
+                        processedContent += '</ul>';
+                        inList = false;
+                    }
+                    const text = para.replace(/^(совет:|кеңес:|подсказка:)/i, '').trim();
+                    const contentLang = detectContentLanguage(content);
+                    const labelText = contentLang === 'kk' ? 'Кеңес' : 'Совет';
+                    processedContent += `
+                        <div class="success-box">
+                            <span class="success-box-icon">💡</span>
+                            <div>
+                                <strong style="color: #065f46;">${labelText}:</strong> ${text}
+                            </div>
+                        </div>
+                    `;
+                }
+                // Пример
+                else if (para.toLowerCase().startsWith('пример:') || 
+                         para.toLowerCase().startsWith('мысал:') ||
+                         para.toLowerCase().startsWith('например:')) {
+                    if (inList) {
+                        processedContent += '</ul>';
+                        inList = false;
+                    }
+                    const text = para.replace(/^(пример:|мысал:|например:)/i, '').trim();
+                    const contentLang = detectContentLanguage(content);
+                    const labelText = contentLang === 'kk' ? 'Мысал' : 'Пример';
+                    processedContent += `
+                        <div class="example-box">
+                            <div class="example-title">
+                                <i class="fas fa-lightbulb"></i>${labelText}
+                            </div>
+                            <p>${text}</p>
+                        </div>
+                    `;
+                }
+                // Списки
+                else if (para.match(/^[-•*]\s+/) || para.match(/^\d+\.\s+/)) {
+                    if (!inList) {
+                        processedContent += '<ul class="list-disc list-inside space-y-2 ml-4">';
+                        inList = true;
+                    }
+                    const text = para.replace(/^[-•*\d+\.\s]+/, '');
+                    // Проверяем наличие strong тега
+                    const strongMatch = text.match(/^([^-]+)\s+-\s+(.+)$/);
+                    if (strongMatch) {
+                        processedContent += `<li><strong>${strongMatch[1]}</strong> - ${strongMatch[2]}</li>`;
+                    } else {
+                        processedContent += `<li>${text}</li>`;
+                    }
+                }
+                // Обычный текст
+                else {
+                    if (inList) {
+                        processedContent += '</ul>';
+                        inList = false;
+                    }
+                    
+                    // Проверяем, содержит ли строка код (HTML теги, функции и т.д.)
+                    const codePatterns = [
+                        /<!DOCTYPE/i,           // HTML doctype
+                        /<html>/i,              // HTML тег
+                        /<\/html>/i,            // Закрывающий HTML
+                        /<head>/i,              // Head тег
+                        /<body>/i,              // Body тег
+                        /<title>/i,             // Title тег
+                        /<h\d>/i,               // Заголовки h1-h6
+                        /<p>/i,                 // Параграф
+                        /<div/i,                // Div
+                        /def\s+\w+\(/,          // Python функция
+                        /function\s+\w+\(/,     // JavaScript функция
+                        /console\.log\(/,       // Console.log
+                        /print\(/,              // Print
+                        /import\s+/,            // Import
+                        /from\s+\w+\s+import/,  // Python from import
+                        /public\s+class/,       // Java class
+                        /#include\s*</,         // C++ include
+                    ];
+                    
+                    const containsCode = codePatterns.some(pattern => pattern.test(para));
+                    
+                    if (containsCode) {
+                        // Пытаемся определить язык
+                        let detectedLang = 'text';
+                        if (para.includes('<!DOCTYPE') || para.includes('<html>') || para.includes('<head>')) {
+                            detectedLang = 'html';
+                        } else if (para.includes('def ') || para.includes('print(')) {
+                            detectedLang = 'python';
+                        } else if (para.includes('function ') || para.includes('console.log')) {
+                            detectedLang = 'javascript';
+                        } else if (para.includes('public class') || para.includes('System.out')) {
+                            detectedLang = 'java';
+                        }
+                        
+                        // Собираем многострочный код
+                        let codeLines = [para];
+                        let j = index + 1;
+                        
+                        // Проверяем следующие строки на продолжение кода
+                        while (j < paragraphs.length) {
+                            const nextPara = paragraphs[j].trim();
+                            // Если следующая строка - продолжение кода
+                            const isCodeContinuation = 
+                                nextPara.startsWith('<') || 
+                                nextPara.startsWith('}') ||
+                                nextPara.startsWith(')') ||
+                                nextPara.includes('</') ||
+                                (codeLines.length > 0 && nextPara.length > 0 && !nextPara.match(/^[А-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүІіҺһ]/));
+                            
+                            if (isCodeContinuation && !nextPara.match(/^##/) && !nextPara.match(/^###/)) {
+                                codeLines.push(nextPara);
+                                // Помечаем эту строку как обработанную
+                                paragraphs[j] = '___PROCESSED___';
+                                j++;
+                            } else {
+                                break;
+                            }
+                        }
+                        
+                        const fullCode = codeLines.join('\n');
+                        processedContent += createCodeBlock(fullCode, detectedLang);
+                    }
+                    // Пропускаем уже обработанные строки
+                    else if (para === '___PROCESSED___') {
+                        // Ничего не делаем
+                    }
+                    // Обычный текст
+                    else {
+                        // Если это первый контент и нет открытой секции - создаем дефолтную
+                        if (!inSection) {
+                            processedContent += `
+                                <div class="theory-section">
+                                    <div class="theory-content">
+                            `;
+                            inSection = true;
+                        }
+                        
+                        // Обработка жирного текста как выделенных терминов
+                        let processed = para.replace(/\*\*([^*]+)\*\*/g, '<span class="term-highlight">$1</span>');
+                        processed = processed.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+                        processedContent += `<p style="margin: 12px 0; line-height: 1.8;">${processed}</p>`;
+                    }
+                }
+            });
+            
+            if (inList) {
+                processedContent += '</ul>';
+            }
+            
+            // Закрываем последнюю открытую секцию
+            if (inSection) {
+                processedContent += '</div></div>'; // Закрываем theory-content и theory-section
+            }
+            
+            return processedContent;
+        }
+
+
+        function detectContentLanguage(text) {
+    // Проверяем наличие казахских символов
+    const kazakhChars = /[әғқңөұүіһӘҒҚҢӨҰҮІҺ]/;
+    return kazakhChars.test(text) ? 'kk' : 'ru';
+}
+
+        function getIconForSection(text) {
+            text = text.toLowerCase();
+            
+            if (text.includes('введение') || text.includes('начало')) return 'play-circle';
+            if (text.includes('основ') || text.includes('концеп')) return 'cube';
+            if (text.includes('структур') || text.includes('архитект')) return 'sitemap';
+            if (text.includes('функци') || text.includes('метод')) return 'code';
+            if (text.includes('данны') || text.includes('информаци')) return 'database';
+            if (text.includes('алгоритм') || text.includes('логик')) return 'brain';
+            if (text.includes('пример') || text.includes('практик')) return 'clipboard-list';
+            if (text.includes('безопасн') || text.includes('защит')) return 'shield-alt';
+            if (text.includes('оптимизаци') || text.includes('производительн')) return 'tachometer-alt';
+            if (text.includes('тестиров') || text.includes('отладк')) return 'bug';
+            if (text.includes('заключени') || text.includes('итог')) return 'flag-checkered';
+            
+            return 'book-open';
+        }
+
+        function createCodeBlock(code, language) {
+            const languageNames = {
+                'js': 'JavaScript',
+                'javascript': 'JavaScript',
+                'py': 'Python',
+                'python': 'Python',
+                'html': 'HTML',
+                'css': 'CSS',
+                'java': 'Java',
+                'cpp': 'C++',
+                'c': 'C',
+                'php': 'PHP',
+                'sql': 'SQL',
+                'bash': 'Bash',
+                'json': 'JSON'
+            };
+            
+            const langName = languageNames[language.toLowerCase()] || language;
+            const codeId = 'code-' + Math.random().toString(36).substr(2, 9);
+            
+            return `
+                <div class="code-block">
+                    <div class="code-header">
+                        <span><i class="fas fa-code"></i>${langName}</span>
+                        <button class="copy-btn" onclick="copyCode('${codeId}')">
+                            <i class="fas fa-copy"></i> Копировать
+                        </button>
+                    </div>
+                    <div class="code-body">
+                        <pre><code id="${codeId}" class="language-${language}">${escapeHtml(code)}</code></pre>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function copyCode(codeId) {
+            const codeElement = document.getElementById(codeId);
+            const text = codeElement.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target.closest('.copy-btn');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Скопировано!';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                }, 2000);
+            });
+        }
+
+        
+        window.onload = initApp;
+
+        // Глобальные функции для HTML
+        window.switchLanguage = switchLanguage;
+        window.toggleTheme = toggleTheme;
+        window.backToHome = backToHome;
+        window.showMainPage = showMainPage;
+        window.loadCourse = loadCourse;
+        window.deleteCourse = deleteCourse;
+        window.handleFileSelect = handleFileSelect;
+        window.generateMicrolearning = generateMicrolearning;
+        window.openModule = openModule;
+        window.completeModule = completeModule;
+        window.prevTheoryPage = prevTheoryPage;
+        window.nextTheoryPage = nextTheoryPage;
+        window.flipCard = flipCard;
+        window.prevCard = prevCard;
+        window.nextCard = nextCard;
+        window.selectAnswer = selectAnswer;
+        window.prevQuestion = prevQuestion;
+        window.nextQuestion = nextQuestion;
+        window.submitTextQuiz = submitTextQuiz;
+        window.updatePracticalCode = updatePracticalCode;
+        window.runCode = runCode;
+        window.checkPracticalAnswer = checkPracticalAnswer;
+        window.prevPractical = prevPractical;
+        window.nextPractical = nextPractical;
+        window.generateCertificate = generateCertificate;
+        window.showCongratulations = showCongratulations;
+        window.downloadCertificate = downloadCertificate;
+        window.backToLearning = backToLearning;
+        window.showCertificatePreview = showCertificatePreview;
+        window.canProceedToNext = canProceedToNext;
+        window.updateShortAnswer = updateShortAnswer;
+        window.checkShortAnswer = checkShortAnswer;
+    </script>
+</body>
+</html>

@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ai-Ustaz - Флеш-карты</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Nunito Sans';
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+            color: #2d3748;
+            min-height: 100vh;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.08;
+            z-index: 0;
+        }
+
+        body::before {
+            width: 500px;
+            height: 500px;
+            background: #3559D5;
+            top: -150px;
+            right: -100px;
+        }
+
+        body::after {
+            width: 350px;
+            height: 350px;
+            background: #3559D5;
+            bottom: -100px;
+            left: -80px;
+        }
+        
+        .glass-card {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3559D5, #5B7FE8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(53, 89, 213, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-secondary:hover {
+            background: white;
+            border-color: #3559D5;
+            color: #3559D5;
+        }
+
+        .upload-zone {
+            border: 3px dashed #cbd5e0;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .upload-zone:hover {
+            border-color: #3559D5;
+            background: rgba(53, 89, 213, 0.05);
+        }
+
+        .icon-large {
+            font-size: 64px;
+            color: #3559D5;
+            margin-bottom: 20px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .flashcard-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .flashcard-front {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid #3559D5;
+        }
+
+        .flashcard-back {
+            background: linear-gradient(135deg, #3559D5 0%, #5B7FE8 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3559D5, #5B7FE8);
+            transition: width 0.3s ease;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #3559D5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .settings-panel {
+            background: rgba(53, 89, 213, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(53, 89, 213, 0.1);
+            padding: 24px;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Nunito Sans';
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #3559D5;
+            box-shadow: 0 0 0 3px rgba(53, 89, 213, 0.1);
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            position: relative;
+            z-index: 10;
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px 0;
+        }
+
+        .header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo-img {
+            height: 80px;
+            width: auto;
+            filter: drop-shadow(0 4px 8px rgba(53, 89, 213, 0.2));
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 8px;
+            background: rgba(53, 89, 213, 0.1);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .lang-btn.active {
+            background: #3559D5;
+            color: white;
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: rgba(53, 89, 213, 0.2);
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Header with Logo and Language Switcher -->
+    <div class="header">
+        <div class="container">
+            <div class="flex justify-between items-center">
+                <img src="/static/images/logo.svg" alt="Ai-Ustaz Logo" class="logo-img" onerror="this.style.display='none'">
+            <!--h1 style="font-size: 20px;">AMANZHOLOV UNIVERSITY <br> AI-SANA</h1-->
+                <div class="lang-switcher">
+                    <button class="lang-btn" onclick="switchLanguage('kk')" id="lang-kk">ҚАЗ</button>
+                    <button class="lang-btn active" onclick="switchLanguage('ru')" id="lang-ru">РУС</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app"></div>
+
+    <script>
+        // ==================== TRANSLATIONS ====================
+        const translations = {
+            kk: {
+                // Header
+                "flashcards": "Флеш-карталар",
+                "backToHome": "Басты бетке оралу",
+                "createNewCards": "Жаңа карталар жасау",
+                "myCardSets": "Менің карталар жинақтарым",
+                "cards": "карталар",
+                "open": "Ашу",
+                "delete": "Жою",
+                
+                // Upload page
+                "createFlashcards": "Флеш-карталар жасау",
+                "uploadPdf": "PDF файлын жүктеу",
+                "clickOrDrag": "Басқып немесе файлды осы аймаққа апарыңыз",
+                "fileNotSelected": "Файл таңдалмаған",
+                "autoGeneration": "Автоматты генерация",
+                "aiWillCreate": "AI сіздің PDF негізінде 15 флеш-карта жасайды",
+                "createFlashcardsBtn": "Флеш-карталарды жасау",
+                
+                // Generating page
+                "creatingFlashcards": "Флеш-карталар жасалуда...",
+                "aiAnalyzing": "AI материалды талдап, карталар жасайды",
+                "mayTake12min": "Бұл 1-2 минутқа созылуы мүмкін",
+                
+                // Learning page
+                "back": "Артқа",
+                "question": "СҰРАК",
+                "answer": "ЖАУАП",
+                "clickToFlip": "Аудару үшін басыңыз",
+                "flip": "Аудару",
+                "prev": "Алдыңғы",
+                "next": "Келесі",
+                "studiedAllCards": "Сіз барлық карталарды оқып шықтыңыз!",
+                "returnToLibrary": "Кітапханаға оралу",
+                
+                // Info messages
+                "infoAutoGeneration": "Автоматты генерация",
+                "infoAiCreate": "AI сіздің PDF негізінде 15 флеш-карта жасайды",
+                
+                // Delete confirmation
+                "deleteConfirm": "Бұл флеш-карталар жинағын жойғыңыз келе ме?"
+            },
+            ru: {
+                // Header
+                "flashcards": "Флеш-карты",
+                "backToHome": "На главную",
+                "createNewCards": "Создать новые карточки",
+                "myCardSets": "Мои наборы карточек",
+                "cards": "карточек",
+                "open": "Открыть",
+                "delete": "Удалить",
+                
+                // Upload page
+                "createFlashcards": "Создайте флеш-карты",
+                "uploadPdf": "Загрузите PDF-файл",
+                "clickOrDrag": "Кликните или перетащите файл в эту область",
+                "fileNotSelected": "Файл не выбран",
+                "autoGeneration": "Автоматическая генерация",
+                "aiWillCreate": "AI создаст 15 флеш-карт на основе вашего PDF",
+                "createFlashcardsBtn": "Создать флеш-карты",
+                
+                // Generating page
+                "creatingFlashcards": "Создаю флеш-карты...",
+                "aiAnalyzing": "AI анализирует материал и создает карточки",
+                "mayTake12min": "Это может занять 1-2 минуты",
+                
+                // Learning page
+                "back": "Назад",
+                "question": "ВОПРОС",
+                "answer": "ОТВЕТ",
+                "clickToFlip": "Нажмите чтобы перевернуть",
+                "flip": "Перевернуть",
+                "prev": "Назад",
+                "next": "Вперед",
+                "studiedAllCards": "Вы изучили все карточки!",
+                "returnToLibrary": "Вернуться в библиотеку",
+                
+                // Info messages
+                "infoAutoGeneration": "Автоматическая генерация",
+                "infoAiCreate": "AI создаст 15 флеш-карт на основе вашего PDF",
+                
+                // Delete confirmation
+                "deleteConfirm": "Удалить этот набор флеш-карт?"
+            }
+        };
+
+        // ==================== STATE ====================
+        const state = {
+            step: 'library', // library, upload, generating, learning
+            pdfFile: null,
+            currentSet: null,
+            sets: [],
+            currentCardIndex: 0,
+            isFlipped: false,
+            settings: {
+                count: 15,
+                difficulty: 'intermediate',
+                type: 'definition',
+                language: 'ru' // default language
+            },
+            studyMode: null, // study, test
+            testAnswers: [],
+            testResults: null
+        };
+
+        // ==================== LANGUAGE MANAGEMENT ====================
+        function getCurrentLanguage() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('lang') || localStorage.getItem('ai-ustaz_lang') || 'ru';
+        }
+
+        function switchLanguage(lang) {
+            // Update URL parameter
+            const url = new URL(window.location);
+            url.searchParams.set('lang', lang);
+            window.history.replaceState({}, '', url);
+            
+            // Save to localStorage
+            localStorage.setItem('ai-ustaz_lang', lang);
+            
+            // Update active button
+            document.getElementById('lang-kk').classList.toggle('active', lang === 'kk');
+            document.getElementById('lang-ru').classList.toggle('active', lang === 'ru');
+            
+            // Update state language
+            state.settings.language = lang;
+            
+            // Update html lang attribute
+            document.documentElement.lang = lang;
+            
+            // Re-render the page with new language
+            render();
+        }
+
+        function t(key) {
+            const currentLang = getCurrentLanguage();
+            return translations[currentLang][key] || key;
+        }
+
+        // ==================== STORAGE ====================
+        function saveSets() {
+            localStorage.setItem('ai-ustaz_flashcard_sets', JSON.stringify(state.sets));
+        }
+
+        function loadSets() {
+            const saved = localStorage.getItem('ai-ustaz_flashcard_sets');
+            if (saved) {
+                state.sets = JSON.parse(saved);
+            }
+        }
+
+        // ==================== INIT ====================
+        function init() {
+            loadSets();
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            
+            // Set initial language from URL or localStorage
+            const currentLang = getCurrentLanguage();
+            switchLanguage(currentLang);
+            
+            // Check if there's a set ID in URL for loading from library
+            const urlParams = new URLSearchParams(window.location.search);
+            const setId = urlParams.get('id');
+            
+            if (setId) {
+                loadSetFromLibrary(parseInt(setId));
+            } else {
+                render();
+            }
+        }
+
+        // ==================== LOAD FROM LIBRARY ====================
+        function loadSetFromLibrary(setId) {
+            const set = state.sets.find(s => s.id === setId);
+            if (set) {
+                state.currentSet = set;
+                state.step = 'learning';
+                state.currentCardIndex = 0;
+                state.isFlipped = false;
+                render();
+            } else {
+                // Если набор не найден, показываем библиотеку
+                state.step = 'library';
+                render();
+            }
+        }
+
+        // ==================== FILE HANDLING ====================
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                state.pdfFile = file;
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('generate-btn').disabled = false;
+            }
+        }
+
+        async function extractTextFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = '';
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                const pageText = content.items.map(item => item.str).join(' ');
+                fullText += pageText + '\n\n';
+            }
+
+            return fullText;
+        }
+
+        // ==================== AI GENERATION ====================
+        async function generateFlashcards() {
+            if (!state.pdfFile) return;
+
+            state.step = 'generating';
+            render();
+
+            try {
+                const pdfText = await extractTextFromPDF(state.pdfFile);
+
+                const formData = new FormData();
+                formData.append('pdf_text', pdfText);
+
+                const response = await fetch('http://localhost:/8000/api/generate-flashcards', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Ошибка генерации');
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const title = data.title || state.pdfFile.name.replace('.pdf', '');
+                    
+                    const newSet = {
+                        id: Date.now(),
+                        title: title,
+                        cards: data.flashcards,
+                        createdAt: new Date().toISOString(),
+                        settings: {
+                            count: data.count || data.flashcards.length,
+                            difficulty: 'auto',
+                            type: 'auto', 
+                            language: 'auto'
+                        },
+                        stats: {
+                            studied: 0,
+                            mastered: 0
+                        }
+                    };
+
+                    state.sets.push(newSet);
+                    saveSets();
+                    state.currentSet = newSet;
+                    state.step = 'learning';
+                    state.currentCardIndex = 0;
+                    render();
+                } else {
+                    alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                    state.step = 'upload';
+                    render();
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при генерации флеш-карт');
+                state.step = 'upload';
+                render();
+            }
+        }
+
+        // ==================== NAVIGATION ====================
+        function backToLibrary() {
+            state.step = 'library';
+            state.currentSet = null;
+            state.currentCardIndex = 0;
+            state.isFlipped = false;
+            render();
+        }
+
+        function backToHome() {
+            const currentLang = getCurrentLanguage();
+            window.location.href = `ai-ustaz.html?lang=${currentLang}`;
+        }
+
+        function goToUpload() {
+            state.step = 'upload';
+            state.pdfFile = null;
+            render();
+        }
+
+        function loadSet(setId) {
+            state.currentSet = state.sets.find(s => s.id === setId);
+            state.step = 'learning';
+            state.currentCardIndex = 0;
+            state.isFlipped = false;
+            render();
+        }
+
+        function deleteSet(setId) {
+            if (confirm(t('deleteConfirm'))) {
+                state.sets = state.sets.filter(s => s.id !== setId);
+                saveSets();
+                render();
+            }
+        }
+
+        // ==================== FLASHCARD CONTROLS ====================
+        function flipCard() {
+            state.isFlipped = !state.isFlipped;
+            render();
+        }
+
+        function nextCard() {
+            if (state.currentCardIndex < state.currentSet.cards.length - 1) {
+                state.currentCardIndex++;
+                state.isFlipped = false;
+                render();
+            }
+        }
+
+        function prevCard() {
+            if (state.currentCardIndex > 0) {
+                state.currentCardIndex--;
+                state.isFlipped = false;
+                render();
+            }
+        }
+
+        // ==================== RENDER FUNCTIONS ====================
+        function renderLibrary() {
+            return `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="glass-card p-12 text-center max-w-md fade-in">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #3559D5, #5B7FE8); border-radius: 20px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-layer-group" style="color: white; font-size: 40px;"></i>
+                        </div>
+                        <h1 class="text-3xl font-bold mb-4 text-gray-800">${t('flashcards')}</h1>
+                        <p class="text-gray-600 mb-6">${t('backToHome')}</p>
+                        <button class="btn-primary mb-4" onclick="backToHome()">
+                            <i class="fas fa-home mr-2"></i>${t('backToHome')}
+                        </button>
+                        <button class="btn-secondary" onclick="goToUpload()">
+                            <i class="fas fa-plus mr-2"></i>${t('createNewCards')}
+                        </button>
+
+                        ${state.sets.length > 0 ? `
+                            <div class="mt-8 pt-8 border-t border-gray-200">
+                                <h3 class="text-lg font-semibold mb-4 text-gray-700">${t('myCardSets')}</h3>
+                                <div class="space-y-3">
+                                    ${state.sets.map(set => `
+                                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <div class="text-left">
+                                                <div class="font-medium text-gray-800">${set.title}</div>
+                                                <div class="text-sm text-gray-500">${set.cards.length} ${t('cards')}</div>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button onclick="loadSet(${set.id})" class="btn-primary text-sm px-3 py-1">
+                                                    <i class="fas fa-play mr-1"></i>${t('open')}
+                                                </button>
+                                                <button onclick="deleteSet(${set.id})" class="btn-secondary text-sm px-3 py-1">
+                                                    <i class="fas fa-trash mr-1"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderUpload() {
+            return `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="max-w-2xl w-full fade-in">
+                        <button onclick="backToLibrary()" class="btn-secondary mb-6">
+                            <i class="fas fa-arrow-left mr-2"></i>${t('back')}
+                        </button>
+
+                        <div class="glass-card p-8">
+                            <div class="text-center mb-8">
+                                <h1 class="text-4xl font-bold mb-2" style="color: #3559D5;">${t('createFlashcards')}</h1>
+                                <p class="text-gray-600">${t('uploadPdf')}</p>
+                            </div>
+
+                            <div class="mb-6">
+                                <div class="upload-zone" onclick="document.getElementById('pdf-input').click()">
+                                    <div class="icon-large">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold mb-2 text-gray-800">${t('uploadPdf')}</h3>
+                                    <p class="text-gray-500 mb-4">${t('clickOrDrag')}</p>
+                                    <p id="file-name" class="text-sm text-gray-400">${t('fileNotSelected')}</p>
+                                    <input type="file" id="pdf-input" accept=".pdf" 
+                                           onchange="handleFileSelect(event)" class="hidden">
+                                </div>
+                            </div>
+
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                                    <div>
+                                        <p class="text-blue-800 font-medium">${t('infoAutoGeneration')}</p>
+                                        <p class="text-blue-700 text-sm">${t('infoAiCreate')}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="generate-btn" onclick="generateFlashcards()" 
+                                    disabled class="btn-primary w-full text-lg py-4">
+                                <i class="fas fa-magic mr-2"></i>${t('createFlashcardsBtn')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderGenerating() {
+            return `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="glass-card p-12 text-center max-w-md fade-in">
+                        <div class="spinner mx-auto mb-6"></div>
+                        <h2 class="text-2xl font-bold mb-4 text-gray-800">${t('creatingFlashcards')}</h2>
+                        <p class="text-gray-600">${t('aiAnalyzing')}</p>
+                        <p class="text-sm text-gray-500 mt-4">${t('mayTake12min')}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLearning() {
+            const set = state.currentSet;
+            const card = set.cards[state.currentCardIndex];
+            const progress = ((state.currentCardIndex + 1) / set.cards.length) * 100;
+
+            return `
+                <div class="min-h-screen p-6">
+                    <div class="max-w-4xl mx-auto">
+                        <!-- Header -->
+                        <div class="glass-card p-6 mb-6 fade-in">
+                            <div class="flex items-center justify-between mb-4">
+                                <button onclick="backToLibrary()" class="btn-secondary">
+                                    <i class="fas fa-arrow-left mr-2"></i>${t('back')}
+                                </button>
+                                <h2 class="text-xl font-bold" style="color: #3559D5;">${set.title}</h2>
+                                <div class="text-gray-600">
+                                    ${state.currentCardIndex + 1} / ${set.cards.length}
+                                </div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Flashcard -->
+                        <div class="flashcard ${state.isFlipped ? 'flipped' : ''}" onclick="flipCard()">
+                            <div class="flashcard-inner">
+                                <div class="flashcard-front">
+                                    <div class="text-center">
+                                        <div class="text-sm text-gray-500 mb-4">
+                                            <i class="fas fa-question-circle mr-1"></i>${t('question')}
+                                        </div>
+                                        <h2 class="text-3xl font-bold text-gray-800">${card.front}</h2>
+                                        <p class="text-sm text-gray-400 mt-6">
+                                            <i class="fas fa-sync-alt mr-1"></i>${t('clickToFlip')}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flashcard-back">
+                                    <div class="text-center">
+                                        <div class="text-sm mb-4 opacity-80">
+                                            <i class="fas fa-check-circle mr-1"></i>${t('answer')}
+                                        </div>
+                                        <h2 class="text-2xl font-bold">${card.back}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="flex justify-center gap-4 mt-8 fade-in">
+                            <button onclick="prevCard()" ${state.currentCardIndex === 0 ? 'disabled' : ''} 
+                                    class="btn-secondary px-8">
+                                <i class="fas fa-arrow-left mr-2"></i>${t('prev')}
+                            </button>
+                            <button onclick="flipCard()" class="btn-primary px-8">
+                                <i class="fas fa-sync-alt mr-2"></i>${t('flip')}
+                            </button>
+                            <button onclick="nextCard()" ${state.currentCardIndex === set.cards.length - 1 ? 'disabled' : ''} 
+                                    class="btn-secondary px-8">
+                                ${t('next')}<i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+
+                        ${state.currentCardIndex === set.cards.length - 1 ? `
+                            <div class="text-center mt-8">
+                                <div class="glass-card p-6 inline-block fade-in">
+                                    <p class="text-gray-600 mb-4">
+                                        <i class="fas fa-check-circle mr-2" style="color: #10b981;"></i>
+                                        ${t('studiedAllCards')}
+                                    </p>
+                                    <button onclick="backToLibrary()" class="btn-primary">
+                                        <i class="fas fa-home mr-2"></i>${t('returnToLibrary')}
+                                    </button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            switch(state.step) {
+                case 'library':
+                    app.innerHTML = renderLibrary();
+                    break;
+                case 'upload':
+                    app.innerHTML = renderUpload();
+                    break;
+                case 'generating':
+                    app.innerHTML = renderGenerating();
+                    break;
+                case 'learning':
+                    app.innerHTML = renderLearning();
+                    break;
+            }
+        }
+
+        // ==================== START ====================
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

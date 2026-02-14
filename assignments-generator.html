@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор заданий - Ai-Ustaz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Nunito Sans', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+            min-height: 100vh;
+        }
+
+        .bg-shapes {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.08;
+        }
+
+        .shape-1 {
+            width: 500px;
+            height: 500px;
+            background: #3559D5;
+            top: -150px;
+            right: -100px;
+        }
+
+        .shape-2 {
+            width: 350px;
+            height: 350px;
+            background: #3559D5;
+            bottom: -100px;
+            left: -80px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            background: #3559D5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #2a4bc0;
+            transform: translateY(-2px);
+        }
+
+        .logo-img {
+            height: 80px;
+            width: auto;
+            filter: drop-shadow(0 4px 8px rgba(53, 89, 213, 0.2));
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 8px;
+            background: rgba(53, 89, 213, 0.1);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .lang-btn.active {
+            background: #3559D5;
+            color: white;
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: rgba(53, 89, 213, 0.2);
+        }
+
+        .generator-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(53, 89, 213, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .generator-title {
+            font-size: 2rem;
+            color: #2D3748;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .generator-subtitle {
+            color: #718096;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .upload-zone {
+            border: 3px dashed #cbd5e0;
+            border-radius: 15px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .upload-zone:hover {
+            border-color: #3559D5;
+            background: #eef2ff;
+        }
+
+        .upload-zone.dragging {
+            border-color: #3559D5;
+            background: #dbeafe;
+            transform: scale(1.02);
+        }
+
+        .icon-large {
+            font-size: 4rem;
+            color: #3559D5;
+            margin-bottom: 20px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3559D5, #5B7FE8);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(53, 89, 213, 0.3);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3559D5;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(53, 89, 213, 0.1);
+        }
+
+        .result-container.active {
+            display: block;
+        }
+
+        .result-title {
+            font-size: 1.8rem;
+            color: #2D3748;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .assignment-card {
+            background: #f8fafc;
+            border-left: 4px solid #3559D5;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .assignment-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(53, 89, 213, 0.1);
+        }
+
+        .assignment-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #3559D5;
+            margin-bottom: 15px;
+        }
+
+        .assignment-description {
+            color: #4a5568;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .footer {
+            text-align: center;
+            color: #718096;
+            margin-top: 80px;
+            padding: 30px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2D3748;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3559D5;
+            box-shadow: 0 0 0 3px rgba(53, 89, 213, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                <span data-i18n="back">Назад</span>
+            </button>
+            <!--div class="logo">Ai-Ustaz</div-->
+            <img src="/static/images/logo.svg" alt="Ai-Ustaz Logo" class="logo-img" onerror="this.style.display='none'">
+            <!--h1 style="font-size: 20px;">AMANZHOLOV UNIVERSITY <br> AI-SANA</h1-->
+            <div class="lang-switcher">
+                <button class="lang-btn active" onclick="switchLanguage('kk')" id="lang-kk">ҚАЗ</button>
+                <button class="lang-btn" onclick="switchLanguage('ru')" id="lang-ru">РУС</button>
+            </div>
+        </div>
+
+        <div class="generator-container">
+            <h1 class="generator-title" data-i18n="title">Генератор заданий</h1>
+            <p class="generator-subtitle" data-i18n="subtitle">Загрузите PDF файл, и AI создаст практические задания автоматически</p>
+            
+            <!-- Параметры генерации -->
+            <div class="input-group">
+                <label for="assignmentType" data-i18n="type-label">Тип заданий</label>
+                <select id="assignmentType">
+                    <option value="practical" data-i18n="type-practical">Практические задания</option>
+                    <option value="lab" data-i18n="type-lab">Лабораторные работы</option>
+                    <option value="project" data-i18n="type-project">Проектные задания</option>
+                    <option value="case" data-i18n="type-case">Кейс-задачи</option>
+                    <option value="mixed" data-i18n="type-mixed">Смешанные</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="count" data-i18n="count-label">Количество заданий</label>
+                <select id="count">
+                    <option value="3">3 задания</option>
+                    <option value="5" selected>5 заданий</option>
+                    <option value="7">7 заданий</option>
+                    <option value="10">10 заданий</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="level" data-i18n="level-label">Уровень сложности</label>
+                <select id="level">
+                    <option value="easy" data-i18n="level-easy">Начальный</option>
+                    <option value="medium" selected data-i18n="level-medium">Средний</option>
+                    <option value="hard" data-i18n="level-hard">Продвинутый</option>
+                </select>
+            </div>
+
+            <!-- Загрузка файла -->
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('pdfInput').click()">
+                <div class="icon-large">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <h3 style="font-size: 1.3rem; font-weight: 600; color: #2D3748; margin-bottom: 10px;" data-i18n="upload-title">
+                    Загрузите PDF-файл
+                </h3>
+                <p style="color: #718096; margin-bottom: 15px;" data-i18n="upload-desc">
+                    Кликните или перетащите файл в эту область
+                </p>
+                <p id="fileName" style="font-size: 0.9rem; color: #3559D5; font-weight: 600;"></p>
+                <input type="file" id="pdfInput" accept=".pdf" class="hidden" onchange="handleFileSelect(event)">
+            </div>
+
+            <button id="generateBtn" class="generate-btn" onclick="generateAssignments()" disabled>
+                <i class="fas fa-magic mr-2"></i>
+                <span data-i18n="generate-btn">Сгенерировать задания</span>
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <h2 style="font-size: 1.5rem; color: #2D3748; margin-bottom: 10px;" data-i18n="generating-title">
+                AI генерирует задания...
+            </h2>
+            <p style="color: #718096;" data-i18n="generating-desc">
+                Анализируем материал и создаём качественные задания
+            </p>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <h2 class="result-title" data-i18n="results-title">Сгенерированные задания</h2>
+            <div id="assignmentsList"></div>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap;">
+                <button class="generate-btn" style="max-width: 300px;" onclick="saveToLibrary()">
+                    <i class="fas fa-bookmark mr-2"></i>
+                    <span data-i18n="save-library">Сохранить в библиотеку</span>
+                </button>
+                <button class="generate-btn" style="max-width: 300px; background: #718096;" onclick="generateAgain()">
+                    <i class="fas fa-redo mr-2"></i>
+                    <span data-i18n="generate-again">Сгенерировать заново</span>
+                </button>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2025 Ai-Ustaz. <span data-i18n="footer">Все права защищены</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Переводы
+        const translations = {
+            kk: {
+                back: 'Артқа',
+                title: 'Тапсырмалар генераторы',
+                subtitle: 'PDF файлын жүктеңіз, AI автоматты түрде практикалық тапсырмаларды жасайды',
+                'type-label': 'Тапсырма түрі',
+                'type-practical': 'Практикалық тапсырмалар',
+                'type-lab': 'Зертханалық жұмыстар',
+                'type-project': 'Жобалық тапсырмалар',
+                'type-case': 'Кейс-тапсырмалар',
+                'type-mixed': 'Аралас',
+                'count-label': 'Тапсырмалар саны',
+                'level-label': 'Қиындық деңгейі',
+                'level-easy': 'Бастапқы',
+                'level-medium': 'Орташа',
+                'level-hard': 'Жетілдірілген',
+                'upload-title': 'PDF файлын жүктеңіз',
+                'upload-desc': 'Файлды басыңыз немесе осы аймаққа сүйреңіз',
+                'generate-btn': 'Тапсырмаларды жасау',
+                'generating-title': 'AI тапсырмаларды жасап жатыр...',
+                'generating-desc': 'Материалды талдап, сапалы тапсырмалар жасаймыз',
+                'results-title': 'Жасалған тапсырмалар',
+                'generate-again': 'Қайта жасау',
+                'save-library': 'Кітапханаға сақтау',
+                'saved-success': 'Кітапханаға сақталды!',
+                'assignment-title': 'Тапсырма',
+                footer: 'Барлық құқықтар қорғалған',
+                'alert-file': 'PDF файлын жүктеңіз',
+                'alert-error': 'Қате орын алды. Кейінірек қайталап көріңіз'
+            },
+            ru: {
+                back: 'Назад',
+                title: 'Генератор заданий',
+                subtitle: 'Загрузите PDF файл, и AI создаст практические задания автоматически',
+                'type-label': 'Тип заданий',
+                'type-practical': 'Практические задания',
+                'type-lab': 'Лабораторные работы',
+                'type-project': 'Проектные задания',
+                'type-case': 'Кейс-задачи',
+                'type-mixed': 'Смешанные',
+                'count-label': 'Количество заданий',
+                'level-label': 'Уровень сложности',
+                'level-easy': 'Начальный',
+                'level-medium': 'Средний',
+                'level-hard': 'Продвинутый',
+                'upload-title': 'Загрузите PDF-файл',
+                'upload-desc': 'Кликните или перетащите файл в эту область',
+                'generate-btn': 'Сгенерировать задания',
+                'generating-title': 'AI генерирует задания...',
+                'generating-desc': 'Анализируем материал и создаём качественные задания',
+                'results-title': 'Сгенерированные задания',
+                'generate-again': 'Сгенерировать заново',
+                'save-library': 'Сохранить в библиотеку',
+                'saved-success': 'Сохранено в библиотеку!',
+                'assignment-title': 'Задание',
+                footer: 'Все права защищены',
+                'alert-file': 'Пожалуйста, загрузите PDF файл',
+                'alert-error': 'Произошла ошибка. Попробуйте позже'
+            }
+        };
+
+        let currentLang = localStorage.getItem('ai-ustaz_lang') || 'ru';
+        let pdfFile = null;
+        let pdfText = '';
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('ai-ustaz_lang', lang);
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`lang-${lang}`).classList.add('active');
+            document.documentElement.lang = lang;
+            
+            updateTexts();
+        }
+
+        function updateTexts() {
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    element.textContent = translations[currentLang][key];
+                }
+            });
+        }
+
+        function goBack() {
+            window.location.href = 'ai-ustaz.html';
+        }
+
+        // Drag & Drop
+        const uploadZone = document.getElementById('uploadZone');
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragging');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragging');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragging');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type === 'application/pdf') {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                handleFile(file);
+            }
+        }
+
+        async function handleFile(file) {
+            pdfFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('generateBtn').disabled = false;
+            
+            // Извлекаем текст из PDF
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = '';
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                }
+                
+                pdfText = fullText;
+                console.log('PDF текст извлечен, длина:', pdfText.length);
+            } catch (error) {
+                console.error('Ошибка извлечения текста из PDF:', error);
+                alert('Ошибка чтения PDF файла');
+            }
+        }
+
+        async function generateAssignments() {
+            if (!pdfFile || !pdfText) {
+                alert(translations[currentLang]['alert-file']);
+                return;
+            }
+
+            const assignmentType = document.getElementById('assignmentType').value;
+            const count = document.getElementById('count').value;
+            const level = document.getElementById('level').value;
+
+            // Показываем загрузку
+            document.querySelector('.generator-container').style.display = 'none';
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('resultContainer').classList.remove('active');
+
+            try {
+                const response = await fetch('/api/generate-assignments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pdf_text: pdfText,
+                        pdf_name: pdfFile.name,
+                        assignment_type: assignmentType,
+                        count: parseInt(count),
+                        level: level,
+                        language: currentLang
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayAssignments(data.assignments);
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            } catch (error) {
+                console.error('Ошибка генерации:', error);
+                alert(translations[currentLang]['alert-error']);
+                document.querySelector('.generator-container').style.display = 'block';
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+            }
+        }
+
+        function displayAssignments(assignments) {
+            // Сохраняем задания для возможности сохранения в библиотеку
+            lastGeneratedAssignments = assignments;
+            
+            const container = document.getElementById('assignmentsList');
+            container.innerHTML = '';
+
+            assignments.forEach((assignment, index) => {
+                const card = document.createElement('div');
+                card.className = 'assignment-card';
+                card.innerHTML = `
+                    <h3 class="assignment-title">
+                        ${translations[currentLang]['assignment-title']} ${index + 1}: ${assignment.title || ''}
+                    </h3>
+                    <div class="assignment-description">${assignment.description || assignment}</div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('resultContainer').classList.add('active');
+        }
+
+        function generateAgain() {
+            document.querySelector('.generator-container').style.display = 'block';
+            document.getElementById('resultContainer').classList.remove('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Сохранение в библиотеку
+        let lastGeneratedAssignments = [];
+        
+        function saveToLibrary() {
+            if (lastGeneratedAssignments.length === 0) {
+                alert('Нет заданий для сохранения');
+                return;
+            }
+
+            // Формируем контент для сохранения
+            let content = '';
+            lastGeneratedAssignments.forEach((assignment, index) => {
+                content += `${assignment.title}\n\n${assignment.description}\n\n---\n\n`;
+            });
+
+            // Получаем существующую библиотеку
+            const library = JSON.parse(localStorage.getItem('ai-ustaz_library') || '[]');
+
+            // Создаём новый элемент
+            const newItem = {
+                type: 'assignments',
+                title: `${translations[currentLang]['assignment-title']} (${lastGeneratedAssignments.length} шт.) - ${pdfFile ? pdfFile.name : 'Без названия'}`,
+                date: new Date().toLocaleDateString(currentLang === 'kk' ? 'kk-KZ' : 'ru-RU'),
+                preview: lastGeneratedAssignments[0].description.substring(0, 150) + '...',
+                content: content,
+                timestamp: Date.now()
+            };
+
+            // Добавляем в начало списка
+            library.unshift(newItem);
+
+            // Сохраняем
+            localStorage.setItem('ai-ustaz_library', JSON.stringify(library));
+
+            // Показываем уведомление
+            alert(translations[currentLang]['saved-success']);
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`lang-${currentLang}`).classList.add('active');
+            document.documentElement.lang = currentLang;
+            updateTexts();
+        });
+    </script>
+</body>
+</html>

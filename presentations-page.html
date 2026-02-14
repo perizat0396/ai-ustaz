@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ai-Ustaz - Интерактивные презентации</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.08;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::before {
+            width: 500px;
+            height: 500px;
+            background: #3559D5;
+            top: -150px;
+            right: -100px;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        body::after {
+            width: 350px;
+            height: 350px;
+            background: #5B7FE8;
+            bottom: -100px;
+            left: -80px;
+            animation: float 15s infinite ease-in-out reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(30px, -30px); }
+            66% { transform: translate(-20px, 20px); }
+        }
+        
+        .glass-card {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3559D5, #5B7FE8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(53, 89, 213, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-secondary:hover {
+            background: #f7fafc;
+            border-color: #3559D5;
+            color: #3559D5;
+        }
+
+        .upload-zone {
+            border: 2px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 48px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .upload-zone:hover {
+            border-color: #3559D5;
+            background: rgba(53, 89, 213, 0.05);
+        }
+
+        .upload-zone.dragover {
+            border-color: #3559D5;
+            background: rgba(53, 89, 213, 0.1);
+            transform: scale(1.02);
+        }
+
+        .slide-preview {
+            aspect-ratio: 16/9;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-preview:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .slide-preview.active {
+            border: 3px solid #3559D5;
+            box-shadow: 0 8px 24px rgba(53, 89, 213, 0.3);
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .slide-editor {
+            aspect-ratio: 16/9;
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .theme-option {
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .theme-option:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-option.selected {
+            border-color: #3559D5;
+            box-shadow: 0 4px 16px rgba(53, 89, 213, 0.3);
+        }
+
+        .theme-label {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-content {
+            background: white;
+            padding: 48px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3559D5;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ai-thinking {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .ai-thinking span {
+            width: 12px;
+            height: 12px;
+            background: #3559D5;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .ai-thinking span:nth-child(1) { animation-delay: -0.32s; }
+        .ai-thinking span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #718096;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-circle {
+            background: linear-gradient(135deg, #3559D5, #5B7FE8);
+            color: white;
+        }
+
+        .step.completed .step-circle {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-line {
+            width: 60px;
+            height: 2px;
+            background: #e2e8f0;
+        }
+
+        .step.completed ~ .step .step-line {
+            background: #10b981;
+        }
+
+        /* Theme Styles */
+        .theme-biology { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .theme-chemistry { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
+        .theme-physics { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .theme-math { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .theme-history { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .theme-geography { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+        .theme-literature { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
+        .theme-tech { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
+        .theme-business { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
+        .theme-art { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+
+        .slide-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .slide-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1a202c;
+        }
+
+        .slide-text {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: #4a5568;
+        }
+
+        .slide-bullets {
+            list-style: none;
+            padding: 0;
+        }
+
+        .slide-bullets li {
+            padding: 12px 0;
+            padding-left: 32px;
+            position: relative;
+            font-size: 1.125rem;
+            line-height: 1.6;
+        }
+
+        .slide-bullets li::before {
+            content: '●';
+            position: absolute;
+            left: 0;
+            color: #3559D5;
+            font-size: 1.5rem;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .icon-item {
+            text-align: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+        }
+
+        .icon-item i {
+            font-size: 2rem;
+            color: #3559D5;
+            margin-bottom: 8px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 100;
+            background: white;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button:hover {
+            background: #f7fafc;
+            border-color: #3559D5;
+            color: #3559D5;
+            transform: translateX(-4px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i>
+        <span>Назад</span>
+    </button>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px;" id="loadingTitle">
+                Анализирую документ...
+            </h3>
+            <p style="color: #718096;" id="loadingText">
+                ИИ читает ваш текст и подбирает идеальный дизайн
+            </p>
+            <div class="ai-thinking">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <div style="padding: 24px; max-width: 1400px; margin: 0 auto;">
+        <!-- Header -->
+        <div class="header" style="padding: 32px; margin-bottom: 32px;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #3559D5, #5B7FE8); border-radius: 16px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-presentation" style="font-size: 28px; color: white;"></i>
+                </div>
+                <div>
+                    <h1 style="font-size: 2rem; font-weight: 700; color: #1a202c;">Интерактивные презентации</h1>
+                    <p style="color: #718096; margin-top: 4px;">Создайте профессиональную презентацию с помощью ИИ</p>
+                </div>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">
+                    <div class="step-circle">1</div>
+                    <span style="font-weight: 600;">Загрузка</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" id="step2">
+                    <div class="step-circle">2</div>
+                    <span style="font-weight: 600;">Генерация</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" id="step3">
+                    <div class="step-circle">3</div>
+                    <span style="font-weight: 600;">Редактирование</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="glass-card" style="padding: 48px; margin-bottom: 32px;">
+            <div class="upload-zone" id="uploadZone">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 4rem; color: #3559D5; margin-bottom: 16px;"></i>
+                <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;">Загрузите документ</h3>
+                <p style="color: #718096; margin-bottom: 24px;">Перетащите файл сюда или нажмите для выбора</p>
+                <p style="color: #a0aec0; font-size: 0.875rem;">Поддерживаются: TXT, DOCX, PDF (до 10 МБ)</p>
+                <input type="file" id="fileInput" accept=".txt,.docx,.pdf" style="display: none;">
+            </div>
+
+            <div id="fileInfo" style="display: none; margin-top: 24px; padding: 20px; background: rgba(53, 89, 213, 0.05); border-radius: 12px; border-left: 4px solid #3559D5;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-file-alt" style="font-size: 1.5rem; color: #3559D5;"></i>
+                        <div>
+                            <p style="font-weight: 600;" id="fileName">document.txt</p>
+                            <p style="color: #718096; font-size: 0.875rem;" id="fileSize">2.4 KB</p>
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="generatePresentation()">
+                        <i class="fas fa-magic"></i>
+                        Создать презентацию
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Section (Hidden by default) -->
+        <div id="editorSection" style="display: none;">
+            <div class="glass-card" style="padding: 32px; margin-bottom: 32px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h2 style="font-size: 1.5rem; font-weight: 700;">Ваша презентация готова!</h2>
+                        <p style="color: #718096; margin-top: 4px;">Отредактируйте слайды или сразу экспортируйте</p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-secondary" onclick="addSlide()">
+                            <i class="fas fa-plus"></i>
+                            Добавить слайд
+                        </button>
+                        <button class="btn-primary" onclick="exportPresentation()">
+                            <i class="fas fa-download"></i>
+                            Экспорт PPTX
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Theme Info -->
+                <div id="themeInfo" style="padding: 16px; background: rgba(53, 89, 213, 0.05); border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-palette" style="font-size: 1.5rem; color: #3559D5;"></i>
+                    <div>
+                        <p style="font-weight: 600;">Автоматически подобранная тема:</p>
+                        <p style="color: #718096; font-size: 0.875rem;" id="themeDescription">Биология • Зеленые тона • Иконки природы</p>
+                    </div>
+                </div>
+
+                <!-- Main Editor -->
+                <div style="display: grid; grid-template-columns: 250px 1fr; gap: 24px;">
+                    <!-- Slides List -->
+                    <div>
+                        <h3 style="font-weight: 600; margin-bottom: 16px; color: #4a5568;">Слайды</h3>
+                        <div id="slidesList" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Slides will be added here -->
+                        </div>
+                    </div>
+
+                    <!-- Current Slide Editor -->
+                    <div>
+                        <div class="slide-editor" id="currentSlide">
+                            <div class="slide-content">
+                                <h2 class="slide-title">Заголовок слайда</h2>
+                                <ul class="slide-bullets">
+                                    <li>Пункт 1</li>
+                                    <li>Пункт 2</li>
+                                    <li>Пункт 3</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Edit Controls -->
+                        <div style="margin-top: 24px; display: flex; gap: 12px;">
+                            <button class="btn-secondary" onclick="editSlide()">
+                                <i class="fas fa-edit"></i>
+                                Редактировать
+                            </button>
+                            <button class="btn-secondary" onclick="deleteSlide()">
+                                <i class="fas fa-trash"></i>
+                                Удалить слайд
+                            </button>
+                            <button class="btn-secondary" onclick="changeTheme()">
+                                <i class="fas fa-palette"></i>
+                                Сменить тему
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = 'ru';
+        let uploadedFile = null;
+        let uploadedText = '';
+        let presentation = {
+            slides: [],
+            theme: 'biology',
+            icons: []
+        };
+        let currentSlideIndex = 0;
+
+        // Theme definitions with icons
+        const themes = {
+            biology: {
+                name: 'Биология',
+                gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: '#10b981',
+                icons: ['fa-dna', 'fa-microscope', 'fa-leaf', 'fa-seedling', 'fa-virus', 'fa-bacteria'],
+                keywords: ['биология', 'клетка', 'организм', 'эволюция', 'растение', 'животное', 'днк', 'генетика', 'экология']
+            },
+            chemistry: {
+                name: 'Химия',
+                gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+                color: '#8b5cf6',
+                icons: ['fa-flask', 'fa-atom', 'fa-vial', 'fa-burn', 'fa-temperature-high'],
+                keywords: ['химия', 'реакция', 'элемент', 'молекула', 'атом', 'вещество', 'кислота', 'щелочь']
+            },
+            physics: {
+                name: 'Физика',
+                gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                color: '#3b82f6',
+                icons: ['fa-atom', 'fa-bolt', 'fa-magnet', 'fa-wave-square', 'fa-radiation'],
+                keywords: ['физика', 'энергия', 'сила', 'движение', 'волна', 'электричество', 'магнетизм', 'квант']
+            },
+            math: {
+                name: 'Математика',
+                gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                color: '#ef4444',
+                icons: ['fa-calculator', 'fa-square-root-alt', 'fa-percentage', 'fa-divide', 'fa-infinity'],
+                keywords: ['математика', 'уравнение', 'формула', 'геометрия', 'алгебра', 'число', 'функция', 'график']
+            },
+            history: {
+                name: 'История',
+                gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                color: '#f59e0b',
+                icons: ['fa-landmark', 'fa-scroll', 'fa-crown', 'fa-book-open', 'fa-monument'],
+                keywords: ['история', 'война', 'революция', 'цивилизация', 'древний', 'средневековье', 'культура']
+            },
+            geography: {
+                name: 'География',
+                gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                color: '#06b6d4',
+                icons: ['fa-globe', 'fa-map', 'fa-mountain', 'fa-water', 'fa-compass'],
+                keywords: ['география', 'страна', 'континент', 'океан', 'климат', 'карта', 'рельеф', 'природа']
+            },
+            literature: {
+                name: 'Литература',
+                gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+                color: '#ec4899',
+                icons: ['fa-book', 'fa-feather', 'fa-pen-fancy', 'fa-quote-left', 'fa-theater-masks'],
+                keywords: ['литература', 'поэзия', 'роман', 'автор', 'произведение', 'поэт', 'писатель']
+            },
+            tech: {
+                name: 'Технологии',
+                gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                color: '#6366f1',
+                icons: ['fa-microchip', 'fa-robot', 'fa-laptop-code', 'fa-network-wired', 'fa-brain'],
+                keywords: ['технология', 'компьютер', 'программирование', 'искусственный интеллект', 'робот', 'код', 'сеть']
+            },
+            business: {
+                name: 'Бизнес',
+                gradient: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+                color: '#14b8a6',
+                icons: ['fa-chart-line', 'fa-briefcase', 'fa-handshake', 'fa-dollar-sign', 'fa-building'],
+                keywords: ['бизнес', 'экономика', 'финансы', 'маркетинг', 'управление', 'продажи', 'стратегия']
+            },
+            art: {
+                name: 'Искусство',
+                gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                color: '#f97316',
+                icons: ['fa-palette', 'fa-paint-brush', 'fa-image', 'fa-music', 'fa-camera'],
+                keywords: ['искусство', 'живопись', 'музыка', 'творчество', 'художник', 'картина', 'скульптура']
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupUploadZone();
+            
+            // Get language from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('lang')) {
+                currentLang = urlParams.get('lang');
+            }
+        });
+
+        function goBack() {
+            window.location.href = 'ai-ustaz.html?lang=' + currentLang;
+        }
+
+        function setupUploadZone() {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                handleFile(file);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                handleFile(file);
+            });
+        }
+
+        async function handleFile(file) {
+            if (!file) return;
+
+            const maxSize = 10 * 1024 * 1024; // 10 MB
+            if (file.size > maxSize) {
+                alert('Файл слишком большой! Максимальный размер: 10 МБ');
+                return;
+            }
+
+            const validTypes = ['text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                alert('Неподдерживаемый формат файла! Используйте TXT, DOCX или PDF');
+                return;
+            }
+
+            uploadedFile = file;
+
+            // Show file info
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileInfo').style.display = 'block';
+
+            // Extract text based on file type
+            try {
+                if (file.type === 'text/plain') {
+                    uploadedText = await file.text();
+                } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                    uploadedText = await extractTextFromDocx(file);
+                } else if (file.type === 'application/pdf') {
+                    uploadedText = await extractTextFromPdf(file);
+                }
+            } catch (error) {
+                console.error('Error extracting text:', error);
+                alert('Ошибка при чтении файла');
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        async function extractTextFromDocx(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer });
+            return result.value;
+        }
+
+        async function extractTextFromPdf(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let text = '';
+            
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                const pageText = content.items.map(item => item.str).join(' ');
+                text += pageText + '\n';
+            }
+            
+            return text;
+        }
+
+        const response = await fetch('http://localhost:8000/api/presentations-page.html', {
+                    method: 'POST',
+                    body: formData
+                });
+
+        async function generatePresentation() {
+            if (!uploadedText) {
+                alert('Сначала загрузите файл');
+                return;
+            }
+
+            // Update step indicator
+            updateStep(2);
+
+            // Show loading
+            showLoading('Анализирую документ...', 'ИИ читает ваш текст и подбирает идеальный дизайн');
+
+            try {
+                // Step 1: Analyze document
+                const analysisResponse = await fetch(`${API_URL}/analyze-document-presentation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: uploadedText
+                    })
+                });
+
+                if (!analysisResponse.ok) {
+                    throw new Error('Ошибка анализа документа');
+                }
+
+                const analysisData = await analysisResponse.json();
+                
+                if (!analysisData.success) {
+                    throw new Error(analysisData.error || 'Ошибка анализа');
+                }
+
+                const analysis = analysisData.analysis;
+                presentation.theme = analysis.theme;
+
+                // Step 2: Generate presentation structure
+                showLoading('Создаю слайды...', 'ИИ структурирует информацию и создает презентацию');
+
+                const genResponse = await fetch(`${API_URL}/generate-presentation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: uploadedText,
+                        theme: presentation.theme,
+                        title: analysis.title
+                    })
+                });
+
+                if (!genResponse.ok) {
+                    throw new Error('Ошибка генерации презентации');
+                }
+
+                const genData = await genResponse.json();
+                
+                if (!genData.success) {
+                    throw new Error(genData.error || 'Ошибка генерации');
+                }
+
+                presentation.slides = genData.presentation.slides;
+                
+                hideLoading();
+                updateStep(3);
+                showEditor();
+            } catch (error) {
+                console.error('Error generating presentation:', error);
+                hideLoading();
+                alert('Ошибка: ' + error.message + '\n\nУбедитесь, что бэкенд сервер запущен (python flashcards.py)');
+            }
+        }
+
+        function detectTheme(text) {
+            text = text.toLowerCase();
+            let maxScore = 0;
+            let detectedTheme = 'tech';
+
+            for (const [key, theme] of Object.entries(themes)) {
+                let score = 0;
+                for (const keyword of theme.keywords) {
+                    if (text.includes(keyword)) {
+                        score++;
+                    }
+                }
+                if (score > maxScore) {
+                    maxScore = score;
+                    detectedTheme = key;
+                }
+            }
+
+            return detectedTheme;
+        }
+
+        function showLoading(title, text) {
+            document.getElementById('loadingTitle').textContent = title;
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function updateStep(stepNumber) {
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById('step' + i);
+                step.classList.remove('active', 'completed');
+                
+                if (i < stepNumber) {
+                    step.classList.add('completed');
+                } else if (i === stepNumber) {
+                    step.classList.add('active');
+                }
+            }
+        }
+
+        function showEditor() {
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('editorSection').style.display = 'block';
+
+            const theme = themes[presentation.theme];
+            document.getElementById('themeDescription').textContent = 
+                `${theme.name} • ${theme.name} тона • Профессиональные иконки`;
+
+            renderSlidesList();
+            renderCurrentSlide();
+        }
+
+        function renderSlidesList() {
+            const slidesList = document.getElementById('slidesList');
+            slidesList.innerHTML = '';
+
+            presentation.slides.forEach((slide, index) => {
+                const slideEl = document.createElement('div');
+                slideEl.className = 'slide-preview' + (index === currentSlideIndex ? ' active' : '');
+                slideEl.onclick = () => selectSlide(index);
+
+                const theme = themes[presentation.theme];
+                slideEl.style.background = theme.gradient;
+                slideEl.style.padding = '12px';
+
+                slideEl.innerHTML = `
+                    <div class="slide-number">${index + 1}</div>
+                    <div style="color: white; font-weight: 600; font-size: 0.75rem;">
+                        ${slide.title}
+                    </div>
+                `;
+
+                slidesList.appendChild(slideEl);
+            });
+        }
+
+        function selectSlide(index) {
+            currentSlideIndex = index;
+            renderSlidesList();
+            renderCurrentSlide();
+        }
+
+        function renderCurrentSlide() {
+            const slide = presentation.slides[currentSlideIndex];
+            const slideEl = document.getElementById('currentSlide');
+            const theme = themes[presentation.theme];
+
+            slideEl.style.background = `linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.98) 100%), ${theme.gradient}`;
+
+            let content = '';
+            if (slide.type === 'title') {
+                content = `
+                    <div style="text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                        <h1 style="font-size: 3rem; font-weight: 800; color: ${theme.color}; margin-bottom: 16px;">
+                            ${slide.title}
+                        </h1>
+                        <p style="font-size: 1.5rem; color: #718096;">
+                            ${slide.subtitle}
+                        </p>
+                    </div>
+                `;
+            } else if (slide.type === 'content') {
+                const bullets = slide.bullets.map(b => `<li>${b}</li>`).join('');
+                content = `
+                    <div class="slide-content">
+                        <h2 class="slide-title" style="color: ${theme.color};">${slide.title}</h2>
+                        <ul class="slide-bullets">
+                            ${bullets}
+                        </ul>
+                    </div>
+                `;
+            } else if (slide.type === 'conclusion') {
+                const bullets = slide.bullets.map(b => `<li>${b}</li>`).join('');
+                content = `
+                    <div class="slide-content">
+                        <h2 class="slide-title" style="color: ${theme.color};">${slide.title}</h2>
+                        <ul class="slide-bullets">
+                            ${bullets}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            slideEl.innerHTML = content;
+        }
+
+        function addSlide() {
+            const newSlide = {
+                type: 'content',
+                title: 'Новый слайд',
+                bullets: ['Пункт 1', 'Пункт 2', 'Пункт 3']
+            };
+            presentation.slides.push(newSlide);
+            currentSlideIndex = presentation.slides.length - 1;
+            renderSlidesList();
+            renderCurrentSlide();
+        }
+
+        function deleteSlide() {
+            if (presentation.slides.length <= 1) {
+                alert('Нельзя удалить последний слайд');
+                return;
+            }
+
+            if (confirm('Удалить этот слайд?')) {
+                presentation.slides.splice(currentSlideIndex, 1);
+                currentSlideIndex = Math.max(0, currentSlideIndex - 1);
+                renderSlidesList();
+                renderCurrentSlide();
+            }
+        }
+
+        function editSlide() {
+            alert('Функция редактирования в разработке. В полной версии здесь будет визуальный редактор слайдов.');
+        }
+
+        function changeTheme() {
+            alert('Функция смены темы в разработке. В полной версии можно будет выбрать другую тему оформления.');
+        }
+
+        async function exportPresentation() {
+            showLoading('Создаю презентацию...', 'Экспортирую слайды в формат PowerPoint');
+
+            try {
+                const theme = themes[presentation.theme];
+                const title = presentation.slides[0]?.title || 'Презентация';
+
+                const response = await fetch(`${API_URL}/export-pptx`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        slides: presentation.slides,
+                        theme: presentation.theme,
+                        title: title
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка экспорта презентации');
+                }
+
+                // Получаем файл как blob
+                const blob = await response.blob();
+                
+                // Создаем ссылку для скачивания
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${title.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_')}.pptx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                hideLoading();
+                
+                // Показываем уведомление об успехе
+                alert('✅ Презентация успешно экспортирована!\n\nФайл сохранен в папку загрузок.');
+            } catch (error) {
+                console.error('Error exporting presentation:', error);
+                hideLoading();
+                alert('Ошибка экспорта: ' + error.message + '\n\nУбедитесь, что бэкенд сервер запущен.');
+            }
+        }
+    </script>
+</body>
+</html>

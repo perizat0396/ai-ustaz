@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ai-Ustaz - Генератор тестов</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Nunito Sans';
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+            color: #2d3748;
+            min-height: 100vh;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.08;
+            z-index: 0;
+        }
+
+        body::before {
+            width: 500px;
+            height: 500px;
+            background: #3559D5;
+            top: -150px;
+            right: -100px;
+        }
+
+        body::after {
+            width: 350px;
+            height: 350px;
+            background: #3559D5;
+            bottom: -100px;
+            left: -80px;
+        }
+        
+        .glass-card {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3559D5, #5B7FE8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(53, 89, 213, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-secondary:hover {
+            background: white;
+            border-color: #3559D5;
+            color: #3559D5;
+        }
+
+        .upload-zone {
+            border: 3px dashed #cbd5e0;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .upload-zone:hover {
+            border-color: #3559D5;
+            background: rgba(53, 89, 213, 0.05);
+        }
+
+        .upload-zone.dragover {
+            border-color: #3559D5;
+            background: rgba(53, 89, 213, 0.1);
+            transform: scale(1.02);
+        }
+
+        .icon-large {
+            font-size: 64px;
+            color: #3559D5;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #3559D5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .question-card {
+            margin-bottom: 30px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            border-left: 5px solid #3559D5;
+        }
+
+        .question-number {
+            font-size: 0.9rem;
+            color: #3559D5;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            padding: 18px 24px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4A5568;
+        }
+
+        .option:hover {
+            border-color: #3559D5;
+            background: rgba(53, 89, 213, 0.05);
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: #3559D5;
+            background: #3559D5;
+            color: white;
+        }
+
+        .option.correct {
+            border-color: #48BB78;
+            background: #48BB78;
+            color: white;
+        }
+
+        .option.incorrect {
+            border-color: #F56565;
+            background: #F56565;
+            color: white;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #C6F6D5;
+            color: #22543D;
+            border-left: 5px solid #48BB78;
+        }
+
+        .feedback.incorrect {
+            background: #FED7D7;
+            color: #742A2A;
+            border-left: 5px solid #F56565;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3559D5, #5B7FE8);
+            transition: width 0.3s ease;
+        }
+
+        .file-info {
+            display: none;
+            background: rgba(53, 89, 213, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 5px solid #3559D5;
+        }
+
+        .file-name {
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            display: none;
+            background: #FED7D7;
+            color: #742A2A;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-weight: 600;
+            border-left: 5px solid #F56565;
+        }
+
+        /* Стили для новых типов заданий */
+        input[type="text"] {
+            font-family: 'Nunito Sans', sans-serif;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3559D5;
+            box-shadow: 0 0 0 3px rgba(53, 89, 213, 0.1);
+        }
+        
+        select {
+            font-family: 'Nunito Sans', sans-serif;
+            cursor: pointer;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #3559D5;
+            box-shadow: 0 0 0 3px rgba(53, 89, 213, 0.1);
+        }
+        
+        select:disabled {
+            background: #f7fafc;
+            cursor: not-allowed;
+        }
+
+        .header {
+            position: relative;
+            z-index: 10;
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px 0;
+        }
+
+        .header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo-img {
+            height: 80px;
+            width: auto;
+            filter: drop-shadow(0 4px 8px rgba(53, 89, 213, 0.2));
+        }
+
+        .lang-switcher {
+            display: flex;
+            gap: 8px;
+            background: rgba(53, 89, 213, 0.1);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .lang-btn.active {
+            background: #3559D5;
+            color: white;
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: rgba(53, 89, 213, 0.2);
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Header with Logo and Language Switcher -->
+    <div class="header">
+        <div class="container">
+            <div class="flex justify-between items-center">
+            <img src="/static/images/logo.svg" alt="Ai-Ustaz Logo" class="logo-img" onerror="this.style.display='none'">
+            <!--h1 style="font-size: 20px;">AMANZHOLOV UNIVERSITY <br> AI-SANA</h1-->
+                <div class="lang-switcher">
+                    <button class="lang-btn active" onclick="switchLanguage('kk')" id="lang-kk">ҚАЗ</button>
+                    <button class="lang-btn" onclick="switchLanguage('ru')" id="lang-ru">РУС</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Навигация -->
+        <div style="display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
+            <button onclick="goToHome()" class="btn-secondary">
+                <i class="fas fa-home mr-2"></i><span data-i18n="home">На главную</span>
+            </button>
+
+            <button onclick="goBack()" class="btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i><span data-i18n="back">Назад</span>
+            </button>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="fade-in">
+            <div class="glass-card p-8">
+                <div class="text-center mb-8">
+                    <h1 class="text-4xl font-bold mb-2" style="color: #3559D5;">
+                        <i class="fas fa-clipboard-check mr-3"></i><span data-i18n="quizGenerator">Генератор тестов</span>
+                    </h1>
+                    <p class="text-gray-600" data-i18n="uploadDescription">Загрузите файл, и ИИ создаст тестовые задания автоматически</p>
+                </div>
+
+                <div class="mb-6">
+                    <div class="upload-zone" id="uploadArea">
+                        <div class="icon-large">
+                            <i class="fas fa-file-upload"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2 text-gray-800" data-i18n="uploadFile">Загрузите файл</h3>
+                        <p class="text-gray-500 mb-4" data-i18n="clickOrDrag">Кликните или перетащите файл в эту область</p>
+                        <p class="text-sm text-gray-400" data-i18n="supportedFormats">Поддерживаются: PDF, TXT, DOCX</p>
+                        <input type="file" id="fileInput" class="file-input" accept=".pdf,.txt,.docx">
+                    </div>
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <div class="file-name" id="fileName"></div>
+                    <div class="file-size" id="fileSize"></div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                        <div>
+                            <p class="text-blue-800 font-medium" data-i18n="autoGeneration">Автоматическая генерация</p>
+                            <p class="text-blue-700 text-sm" data-i18n="aiWillCreate">AI создаст минимум 10 тестовых вопросов на основе вашего файла</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary generate-btn" id="generateBtn">
+                    <i class="fas fa-magic mr-2"></i><span data-i18n="createQuiz">Создать тестовые задания</span>
+                </button>
+
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" style="display: none;" class="fade-in">
+            <div class="glass-card p-12 text-center">
+                <div class="spinner mb-6"></div>
+                <h2 class="text-2xl font-bold mb-4 text-gray-800" data-i18n="creatingQuiz">Создаю тестовые задания...</h2>
+                <p class="text-gray-600" data-i18n="analyzingMaterial">AI анализирует материал и создает вопросы</p>
+                <p class="text-sm text-gray-500 mt-4" data-i18n="mayTakeTime">Это может занять 10-30 секунд</p>
+            </div>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quizContainer" style="display: none;" class="fade-in">
+            <div class="glass-card p-8 mb-6">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-bold mb-2" style="color: #3559D5;" id="quizTitle" data-i18n="testAssignment">Тестовое задание</h2>
+                    <div class="flex justify-center gap-4 text-gray-600">
+                        <div><span data-i18n="question">Вопрос</span> <span class="font-bold" style="color: #3559D5;" id="currentQuestion">1</span> <span data-i18n="of">из</span> <span id="totalQuestions">10</span></div>
+                        <div>|</div>
+                        <div><span data-i18n="correct">Правильно</span>: <span class="font-bold" style="color: #10b981;" id="correctCount">0</span></div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="glass-card p-8">
+                <div id="questionsContainer"></div>
+
+                <div class="navigation-buttons">
+                    <button class="btn-secondary nav-btn" id="prevBtn">
+                        <i class="fas fa-arrow-left mr-2"></i><span data-i18n="previous">Предыдущий</span>
+                    </button>
+                    <button class="btn-primary nav-btn" id="nextBtn">
+                        <span data-i18n="next">Следующий</span><i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <button class="btn-primary nav-btn" id="finishBtn" style="display: none;">
+                        <i class="fas fa-check-circle mr-2"></i><span data-i18n="finishTest">Завершить тест</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsSection" style="display: none;" class="fade-in">
+            <div class="glass-card p-12 text-center">
+                <div class="text-6xl font-bold mb-6" style="color: #3559D5;" id="resultsScore">0%</div>
+                <h2 class="text-3xl font-bold mb-4 text-gray-800" id="resultsText" data-i18n="excellent">Отлично!</h2>
+                <p class="text-xl text-gray-600 mb-8" id="resultsDetails">
+                    <span data-i18n="youAnsweredCorrectly">Вы правильно ответили на</span> 0 <span data-i18n="outOf">из</span> 10 <span data-i18n="questions">вопросов</span>
+                </p>
+                <div class="flex justify-center gap-4 flex-wrap">
+                    <button class="btn-primary" id="retryBtn">
+                        <i class="fas fa-redo mr-2"></i><span data-i18n="tryAgain">Пройти заново</span>
+                    </button>
+                    <button class="btn-primary" id="saveBtn" onclick="saveQuizToLibrary()" style="background: linear-gradient(135deg, #48BB78, #38A169);">
+                        <i class="fas fa-save mr-2"></i><span data-i18n="saveToLibrary">Сохранить в библиотеку</span>
+                    </button>
+                    <button class="btn-secondary" onclick="goToHome()">
+                        <i class="fas fa-home mr-2"></i><span data-i18n="toHome">На главную</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Переводы
+        const translations = {
+            kk: {
+                home: "Басты бетке",
+                back: "Артқа",
+                quizGenerator: "Тест генераторы",
+                uploadDescription: "Файл жүктеңіз, және AI тест тапсырмаларын автоматты түрде жасайды",
+                uploadFile: "Файл жүктеу",
+                clickOrDrag: "Файлды таңдау үшін басыңыз немесе осы аймаққа сүйреңіз",
+                supportedFormats: "Қолдау көрсетілетін форматтар: PDF, TXT, DOCX",
+                autoGeneration: "Автоматты генерация",
+                aiWillCreate: "AI сіздің файлыңыз негізінде кемінде 10 тест сұрағы жасайды",
+                createQuiz: "Тест тапсырмаларын жасау",
+                creatingQuiz: "Тест тапсырмалары жасалуда...",
+                analyzingMaterial: "AI материалды талдап, сұрақтар жасауда",
+                mayTakeTime: "Бұл 10-30 секундқа созылуы мүмкін",
+                testAssignment: "Тест тапсырмасы",
+                question: "Сұрақ",
+                of: "",
+                correct: "Дұрыс",
+                previous: "Алдыңғы",
+                next: "Келесі",
+                finishTest: "Тесті аяқтау",
+                excellent: "Тамаша!",
+                youAnsweredCorrectly: "Сіз дұрыс жауап бердіңіз",
+                outOf: "",
+                questions: "сұрақ",
+                tryAgain: "Қайта өту",
+                saveToLibrary: "Кітапханаға сақтау",
+                toHome: "Басты бетке",
+                enterAnswer: "Жауабыңызды енгізіңіз...",
+                checkAnswer: "Жауапты тексеру",
+                correctAnswer: "Дұрыс жауап",
+                chooseOption: "Таңдаңыз...",
+                allPairsCorrect: "✓ Барлық жұптар дұрыс сәйкестендірілді!",
+                somePairsIncorrect: "✗ Кейбір жұптар дұрыс емес сәйкестендірілді. Белгіленген жұптарды тексеріңіз.",
+                correctly: "Дұрыс:",
+                questionType: "Сұрақ түрі",
+                multipleChoice: "Жауапты таңдау",
+                trueFalse: "Шын/Жалған",
+                shortAnswer: "Қысқа жауап",
+                fillBlank: "Бос орынды толтыру",
+                matching: "Сәйкестендіру"
+            },
+            ru: {
+                home: "На главную",
+                back: "Назад",
+                quizGenerator: "Генератор тестов",
+                uploadDescription: "Загрузите файл, и ИИ создаст тестовые задания автоматически",
+                uploadFile: "Загрузите файл",
+                clickOrDrag: "Кликните или перетащите файл в эту область",
+                supportedFormats: "Поддерживаются: PDF, TXT, DOCX",
+                autoGeneration: "Автоматическая генерация",
+                aiWillCreate: "AI создаст минимум 10 тестовых вопросов на основе вашего файла",
+                createQuiz: "Создать тестовые задания",
+                creatingQuiz: "Создаю тестовые задания...",
+                analyzingMaterial: "AI анализирует материал и создает вопросы",
+                mayTakeTime: "Это может занять 10-30 секунд",
+                testAssignment: "Тестовое задание",
+                question: "Вопрос",
+                of: "из",
+                correct: "Правильно",
+                previous: "Предыдущий",
+                next: "Следующий",
+                finishTest: "Завершить тест",
+                excellent: "Отлично!",
+                youAnsweredCorrectly: "Вы правильно ответили на",
+                outOf: "из",
+                questions: "вопросов",
+                tryAgain: "Пройти заново",
+                saveToLibrary: "Сохранить в библиотеку",
+                toHome: "На главную",
+                enterAnswer: "Введите ваш ответ...",
+                checkAnswer: "Проверить ответ",
+                correctAnswer: "Правильный ответ",
+                chooseOption: "Выберите...",
+                allPairsCorrect: "✓ Все пары сопоставлены правильно!",
+                somePairsIncorrect: "✗ Некоторые пары сопоставлены неправильно. Проверьте выделенные пары.",
+                correctly: "Правильно:",
+                questionType: "Тип вопроса",
+                multipleChoice: "Выбор ответа",
+                trueFalse: "Правда/Ложь",
+                shortAnswer: "Краткий ответ",
+                fillBlank: "Заполнить пропуск",
+                matching: "Сопоставление"
+            }
+        };
+
+        let currentLang = localStorage.getItem('ai-ustaz_lang') || 'ru';
+        let quizData = null;
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let correctAnswersCount = 0;
+        let selectedFile = null;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const generateBtn = document.getElementById('generateBtn');
+        const uploadSection = document.getElementById('uploadSection');
+        const loading = document.getElementById('loading');
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('ai-ustaz_lang', lang);
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`lang-${lang}`).classList.add('active');
+            document.documentElement.lang = lang;
+            
+            updateTexts();
+        }
+
+        function updateTexts() {
+            // Обновляем все элементы с data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    element.textContent = translations[currentLang][key];
+                }
+            });
+
+            // Обновляем динамические тексты
+            if (quizData) {
+                document.getElementById('quizTitle').textContent = quizData.title || t('testAssignment');
+                document.getElementById('totalQuestions').textContent = quizData.questions.length;
+            }
+        }
+
+        function t(key) {
+            return translations[currentLang][key] || key;
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Устанавливаем язык
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`lang-${currentLang}`).classList.add('active');
+            document.documentElement.lang = currentLang;
+            updateTexts();
+            
+            // Проверяем, есть ли параметр ID в URL для загрузки из библиотеки
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizId = urlParams.get('id');
+            
+            if (quizId) {
+                loadQuizFromLibrary(parseInt(quizId));
+            }
+        });
+
+        // Загрузка теста из библиотеки
+        function loadQuizFromLibrary(quizId) {
+            try {
+                const savedQuizzes = JSON.parse(localStorage.getItem('ai-ustaz_quizzes') || '[]');
+                const quiz = savedQuizzes.find(q => q.id === quizId);
+                
+                if (quiz) {
+                    // Скрываем загрузчик и показываем контейнер теста
+                    document.getElementById('uploadSection').style.display = 'none';
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    // Загружаем данные теста
+                    if (quiz.questions) {
+                        quizData = { questions: quiz.questions };
+                    } else if (quiz.quizData) {
+                        quizData = quiz.quizData;
+                    } else {
+                        quizData = quiz;
+                    }
+                    
+                    userAnswers = new Array(quizData.questions.length).fill(null);
+                    startQuiz();
+                } else {
+                    showError('Тест не найден в библиотеке');
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки теста:', error);
+                showError('Ошибка загрузки теста из библиотеки');
+            }
+        }
+
+        // Обработчики загрузки файла
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            selectedFile = file;
+            document.getElementById('fileName').innerHTML = `<i class="fas fa-file mr-2"></i>${file.name}`;
+            document.getElementById('fileSize').textContent = `${t('size')}: ${(file.size / 1024).toFixed(2)} KB`;
+            fileInfo.style.display = 'block';
+            generateBtn.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        // Генерация теста
+        generateBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            uploadSection.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const response = await fetch('http://localhost:8000/api/generate-quiz', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.quiz) {
+                    quizData = data.quiz;
+                    userAnswers = new Array(quizData.questions.length).fill(null);
+                    startQuiz();
+                } else {
+                    showError(data.error || 'Не удалось сгенерировать тест');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showError('Ошибка соединения с сервером. Убедитесь, что сервер запущен.');
+            }
+        });
+
+        function showError(message) {
+            loading.style.display = 'none';
+            uploadSection.style.display = 'block';
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function startQuiz() {
+            loading.style.display = 'none';
+            uploadSection.style.display = 'none';
+            quizContainer.style.display = 'block';
+            document.getElementById('quizTitle').textContent = quizData.title || t('testAssignment');
+            document.getElementById('totalQuestions').textContent = quizData.questions.length;
+            renderQuestion();
+        }
+
+        // Функции навигации
+        function goToHome() {
+            window.location.href = 'ai-ustaz.html';
+        }
+
+        function goBack() {
+            window.location.href = 'quiz-generator.html';
+        }
+
+        // Сохранение теста в библиотеку
+        function saveQuizToLibrary() {
+            try {
+                const savedQuizzes = JSON.parse(localStorage.getItem('ai-ustaz_quizzes') || '[]');
+                const newQuiz = {
+                    id: Date.now(),
+                    title: quizData.title || t('testAssignment'),
+                    quizData: quizData,
+                    createdAt: new Date().toISOString(),
+                    results: {
+                        score: Math.round((correctAnswersCount / quizData.questions.length) * 100),
+                        correct: correctAnswersCount,
+                        total: quizData.questions.length
+                    }
+                };
+                
+                savedQuizzes.push(newQuiz);
+                localStorage.setItem('ai-ustaz_quizzes', JSON.stringify(savedQuizzes));
+                
+                alert(t('quizSaved'));
+            } catch (error) {
+                console.error('Ошибка сохранения теста:', error);
+                alert(t('saveError'));
+            }
+        }
+
+        // Обработчики для кнопок навигации
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.questions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        });
+
+        document.getElementById('finishBtn').addEventListener('click', finishQuiz);
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const finishBtn = document.getElementById('finishBtn');
+            
+            prevBtn.style.display = currentQuestionIndex > 0 ? 'block' : 'none';
+            
+            if (currentQuestionIndex === quizData.questions.length - 1) {
+                nextBtn.style.display = 'none';
+                finishBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                finishBtn.style.display = 'none';
+            }
+        }
+
+        function finishQuiz() {
+            // Подсчитываем окончательный результат
+            let finalCorrect = 0;
+            userAnswers.forEach((answer, index) => {
+                if (checkAnswer(quizData.questions[index], answer)) {
+                    finalCorrect++;
+                }
+            });
+            
+            const score = Math.round((finalCorrect / quizData.questions.length) * 100);
+            
+            // Показываем результаты
+            quizContainer.style.display = 'none';
+            resultsSection.style.display = 'block';
+            
+            document.getElementById('resultsScore').textContent = score + '%';
+            document.getElementById('resultsDetails').textContent = 
+                `${t('youAnsweredCorrectly')} ${finalCorrect} ${t('outOf')} ${quizData.questions.length} ${t('questions')}`;
+            
+            // Текст результата в зависимости от баллов
+            let resultsText = '';
+            if (score >= 90) resultsText = t('excellent') + ' 🎉';
+            else if (score >= 70) resultsText = t('good') + ' 👍';
+            else if (score >= 50) resultsText = t('satisfactory') + ' 👌';
+            else resultsText = t('tryAgain') + ' 💪';
+            
+            document.getElementById('resultsText').textContent = resultsText;
+        }
+
+        // Новая функция renderQuestion с поддержкой всех типов
+        function renderQuestion() {
+            const question = quizData.questions[currentQuestionIndex];
+            const container = document.getElementById('questionsContainer');
+            
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            
+            // Обновляем прогресс-бар
+            const progress = ((currentQuestionIndex + 1) / quizData.questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            let contentHTML = '';
+            
+            // Рендерим в зависимости от типа вопроса
+            switch(question.type) {
+                case 'multiple_choice':
+                case 'true_false':
+                    contentHTML = renderMultipleChoice(question);
+                    break;
+                case 'short_answer':
+                    contentHTML = renderShortAnswer(question);
+                    break;
+                case 'fill_blank':
+                    contentHTML = renderFillBlank(question);
+                    break;
+                case 'matching':
+                    contentHTML = renderMatching(question);
+                    break;
+                default:
+                    contentHTML = renderMultipleChoice(question);
+            }
+
+            let feedbackHTML = '';
+            if (userAnswers[currentQuestionIndex] !== null) {
+                const isCorrect = checkAnswer(question, userAnswers[currentQuestionIndex]);
+                feedbackHTML = `
+                    <div class="feedback ${isCorrect ? 'correct' : 'incorrect'}" style="display: block;">
+                        <i class="fas ${isCorrect ? 'fa-check-circle' : 'fa-times-circle'} mr-2"></i>
+                        ${isCorrect ? t('correct') + '!' : t('incorrect') + '.'} 
+                        ${question.explanation || ''}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="question-card">
+                    <div class="question-number">
+                        <i class="fas fa-question-circle mr-2"></i>${t('question')} ${currentQuestionIndex + 1}
+                        <span style="float: right; color: #718096;">${t('questionType')}: ${getQuestionTypeLabel(question.type)}</span>
+                    </div>
+                    <div class="question-text">${question.question}</div>
+                    ${contentHTML}
+                    ${feedbackHTML}
+                </div>
+            `;
+
+            updateNavigationButtons();
+        }
+
+        function getQuestionTypeLabel(type) {
+            const labels = {
+                'multiple_choice': t('multipleChoice'),
+                'true_false': t('trueFalse'),
+                'short_answer': t('shortAnswer'),
+                'fill_blank': t('fillBlank'),
+                'matching': t('matching')
+            };
+            return labels[type] || type;
+        }
+
+        function renderMultipleChoice(question) {
+            let optionsHTML = '';
+            question.options.forEach((option, index) => {
+                const isSelected = userAnswers[currentQuestionIndex] === index;
+                const selectedClass = isSelected ? 'selected' : '';
+                const disabledClass = userAnswers[currentQuestionIndex] !== null ? 'disabled' : '';
+                
+                let resultClass = '';
+                if (userAnswers[currentQuestionIndex] !== null) {
+                    if (index === question.correctAnswer) {
+                        resultClass = 'correct';
+                    } else if (isSelected) {
+                        resultClass = 'incorrect';
+                    }
+                }
+                
+                optionsHTML += `
+                    <div class="option ${selectedClass} ${disabledClass} ${resultClass}" 
+                         onclick="selectAnswer(${index})" 
+                         data-index="${index}">
+                        ${option}
+                    </div>
+                `;
+            });
+            
+            return `<div class="options">${optionsHTML}</div>`;
+        }
+
+        function renderShortAnswer(question) {
+            const isAnswered = userAnswers[currentQuestionIndex] !== null;
+            const userAnswer = userAnswers[currentQuestionIndex] || '';
+            
+            return `
+                <div style="margin-top: 20px;">
+                    <input type="text" 
+                           id="shortAnswerInput" 
+                           placeholder="${t('enterAnswer')}" 
+                           value="${userAnswer}"
+                           ${isAnswered ? 'disabled' : ''}
+                           style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.1rem; font-weight: 600;"
+                           onkeypress="if(event.key==='Enter') submitShortAnswer()">
+                    ${!isAnswered ? `
+                    <button onclick="submitShortAnswer()" class="btn-primary" style="margin-top: 15px; width: 100%;">
+                        <i class="fas fa-check mr-2"></i>${t('checkAnswer')}
+                    </button>
+                    ` : ''}
+                    ${isAnswered ? `
+                    <div style="margin-top: 15px; padding: 15px; background: rgba(72, 187, 120, 0.1); border-radius: 10px; border-left: 4px solid #48BB78;">
+                        <strong>${t('correctAnswer')}:</strong> ${question.correctAnswer}
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderFillBlank(question) {
+            const isAnswered = userAnswers[currentQuestionIndex] !== null;
+            const userAnswer = userAnswers[currentQuestionIndex] || '';
+            
+            // Разбиваем текст на части по ___
+            const parts = question.question.split('___');
+            
+            return `
+                <div style="margin-top: 20px;">
+                    <div style="font-size: 1.2rem; line-height: 1.8; padding: 20px; background: rgba(53, 89, 213, 0.05); border-radius: 12px;">
+                        ${parts[0]}
+                        <input type="text" 
+                               id="fillBlankInput" 
+                               placeholder="..." 
+                               value="${userAnswer}"
+                               ${isAnswered ? 'disabled' : ''}
+                               style="display: inline-block; min-width: 150px; padding: 8px 15px; border: 2px solid #3559D5; border-radius: 8px; font-size: 1.1rem; font-weight: 700; background: white;">
+                        ${parts[1] || ''}
+                    </div>
+                    ${!isAnswered ? `
+                    <button onclick="submitFillBlank()" class="btn-primary" style="margin-top: 15px; width: 100%;">
+                        <i class="fas fa-check mr-2"></i>${t('checkAnswer')}
+                    </button>
+                    ` : ''}
+                    ${isAnswered ? `
+                    <div style="margin-top: 15px; padding: 15px; background: rgba(72, 187, 120, 0.1); border-radius: 10px; border-left: 4px solid #48BB78;">
+                        <strong>${t('correctAnswer')}:</strong> ${question.correctAnswer}
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderMatching(question) {
+            const isAnswered = userAnswers[currentQuestionIndex] !== null;
+            
+            if (!question.pairs || question.pairs.length === 0) {
+                return '<p>Ошибка: пары для сопоставления не найдены</p>';
+            }
+            
+            // Перемешиваем правые части ДЛЯ ДАННОГО ВОПРОСА и сохраняем порядок
+            let rightOptions;
+            if (!window.matchingShuffles) {
+                window.matchingShuffles = {};
+            }
+            
+            const shuffleKey = `q_${question.type}_${currentQuestionIndex}`;
+            if (!window.matchingShuffles[shuffleKey]) {
+                rightOptions = question.pairs.map(p => p.right).sort(() => Math.random() - 0.5);
+                window.matchingShuffles[shuffleKey] = rightOptions;
+            } else {
+                rightOptions = window.matchingShuffles[shuffleKey];
+            }
+            
+            let matchingHTML = '<div style="display: grid; gap: 15px; margin-top: 20px;">';
+            
+            question.pairs.forEach((pair, index) => {
+                const userMatch = userAnswers[currentQuestionIndex] ? userAnswers[currentQuestionIndex][index] : '';
+                const isCorrect = isAnswered && userMatch === pair.right;
+                const isWrong = isAnswered && userMatch !== pair.right && userMatch !== '';
+                
+                let backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                let selectBorder = '2px solid #e2e8f0';
+                let selectBg = '';
+                
+                if (isAnswered) {
+                    if (isCorrect) {
+                        backgroundColor = 'rgba(220, 252, 231, 0.5)';
+                        selectBorder = '2px solid #48BB78';
+                        selectBg = 'background: rgba(72, 187, 120, 0.1);';
+                    } else if (isWrong) {
+                        backgroundColor = 'rgba(254, 226, 226, 0.5)';
+                        selectBorder = '2px solid #F56565';
+                        selectBg = 'background: rgba(245, 101, 101, 0.1);';
+                    }
+                }
+                
+                matchingHTML += `
+                    <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items: center; padding: 15px; background: ${backgroundColor}; border-radius: 12px; border-left: 4px solid ${isCorrect ? '#48BB78' : (isWrong ? '#F56565' : '#e2e8f0')};">
+                        <div style="font-weight: 600; padding: 10px; background: rgba(53, 89, 213, 0.1); border-radius: 8px;">
+                            ${pair.left}
+                        </div>
+                        <i class="fas fa-arrows-alt-h" style="color: #3559D5;"></i>
+                        <div>
+                            <select id="match_${index}" ${isAnswered ? 'disabled' : ''} 
+                                    style="padding: 10px; border: ${selectBorder}; border-radius: 8px; font-weight: 600; ${selectBg} width: 100%;">
+                                <option value="">${t('chooseOption')}</option>
+                                ${rightOptions.map(opt => `
+                                    <option value="${opt}" ${userMatch === opt ? 'selected' : ''}>${opt}</option>
+                                `).join('')}
+                            </select>
+                            ${isAnswered && isWrong ? `
+                                <div style="margin-top: 8px; padding: 8px; background: rgba(72, 187, 120, 0.1); border-radius: 6px; border-left: 3px solid #48BB78; font-size: 0.9rem;">
+                                    <strong>${t('correctly')}</strong> ${pair.right}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            matchingHTML += '</div>';
+            
+            if (!isAnswered) {
+                matchingHTML += `
+                    <button onclick="submitMatching()" class="btn-primary" style="margin-top: 20px; width: 100%;">
+                        <i class="fas fa-check mr-2"></i>${t('checkAnswer')}
+                    </button>
+                `;
+            } else {
+                const allCorrect = question.pairs.every((pair, index) => {
+                    const userMatch = userAnswers[currentQuestionIndex] ? userAnswers[currentQuestionIndex][index] : '';
+                    return userMatch === pair.right;
+                });
+                
+                matchingHTML += `
+                    <div style="margin-top: 20px; padding: 15px; background: ${allCorrect ? 'rgba(220, 252, 231, 0.3)' : 'rgba(254, 226, 226, 0.3)'}; border-radius: 10px; border-left: 4px solid ${allCorrect ? '#48BB78' : '#F56565'};">
+                        <strong>${allCorrect ? t('allPairsCorrect') : t('somePairsIncorrect')}</strong>
+                    </div>
+                `;
+            }
+            
+            return matchingHTML;
+        }
+
+        function submitShortAnswer() {
+            const input = document.getElementById('shortAnswerInput');
+            if (!input || !input.value.trim()) return;
+            
+            userAnswers[currentQuestionIndex] = input.value.trim();
+            const question = quizData.questions[currentQuestionIndex];
+            
+            if (checkAnswer(question, userAnswers[currentQuestionIndex])) {
+                correctAnswersCount++;
+                document.getElementById('correctCount').textContent = correctAnswersCount;
+            }
+            
+            renderQuestion();
+        }
+
+        function submitFillBlank() {
+            const input = document.getElementById('fillBlankInput');
+            if (!input || !input.value.trim()) return;
+            
+            userAnswers[currentQuestionIndex] = input.value.trim();
+            const question = quizData.questions[currentQuestionIndex];
+            
+            if (checkAnswer(question, userAnswers[currentQuestionIndex])) {
+                correctAnswersCount++;
+                document.getElementById('correctCount').textContent = correctAnswersCount;
+            }
+            
+            renderQuestion();
+        }
+
+        function submitMatching() {
+            const question = quizData.questions[currentQuestionIndex];
+            const matches = [];
+            
+            question.pairs.forEach((pair, index) => {
+                const select = document.getElementById(`match_${index}`);
+                matches.push(select ? select.value : '');
+            });
+            
+            userAnswers[currentQuestionIndex] = matches;
+            
+            if (checkAnswer(question, matches)) {
+                correctAnswersCount++;
+                document.getElementById('correctCount').textContent = correctAnswersCount;
+            }
+            
+            renderQuestion();
+        }
+
+        function checkAnswer(question, userAnswer) {
+            switch(question.type) {
+                case 'multiple_choice':
+                case 'true_false':
+                    return userAnswer === question.correctAnswer;
+                
+                case 'short_answer':
+                case 'fill_blank':
+                    // Сравнение без учета регистра и пробелов
+                    const correct = (question.correctAnswer || '').toLowerCase().trim();
+                    const user = (userAnswer || '').toLowerCase().trim();
+                    return user === correct;
+                
+                case 'matching':
+                    if (!Array.isArray(userAnswer)) return false;
+                    return question.pairs.every((pair, index) => 
+                        userAnswer[index] === pair.right
+                    );
+                
+                default:
+                    return false;
+            }
+        }
+
+        function selectAnswer(index) {
+            if (userAnswers[currentQuestionIndex] !== null) return;
+
+            userAnswers[currentQuestionIndex] = index;
+            const question = quizData.questions[currentQuestionIndex];
+            
+            if (checkAnswer(question, index)) {
+                correctAnswersCount++;
+                document.getElementById('correctCount').textContent = correctAnswersCount;
+            }
+
+            renderQuestion();
+        }
+
+        document.getElementById('retryBtn').addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers = new Array(quizData.questions.length).fill(null);
+            correctAnswersCount = 0;
+            document.getElementById('correctCount').textContent = '0';
+            resultsSection.style.display = 'none';
+            quizContainer.style.display = 'block';
+            renderQuestion();
+        });
+
+        // Добавляем недостающие переводы
+        translations.kk.size = "Өлшемі";
+        translations.kk.quizSaved = "Тест кітапханаға сәтті сақталды!";
+        translations.kk.saveError = "Тестті сақтау қатесі";
+        translations.kk.good = "Жақсы";
+        translations.kk.satisfactory = "Қанағаттанарлық";
+        translations.kk.correct = "Дұрыс";
+        translations.kk.incorrect = "Қате";
+
+        translations.ru.size = "Размер";
+        translations.ru.quizSaved = "Тест успешно сохранен в библиотеку!";
+        translations.ru.saveError = "Ошибка сохранения теста";
+        translations.ru.good = "Хорошо";
+        translations.ru.satisfactory = "Удовлетворительно";
+        translations.ru.correct = "Правильно";
+        translations.ru.incorrect = "Неправильно";
+    </script>
+</body>
+</html>
