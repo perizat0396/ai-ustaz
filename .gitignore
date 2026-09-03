@@ -17,3 +17,6 @@ dist-ssr
 .idea
 .DS_Store
 Thumbs.db
+
+# TS incremental build cache
+*.tsbuildinfo
