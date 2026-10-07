@@ -31,10 +31,12 @@ jobs:
       # (Settings → Secrets and variables → Actions), в коде их нет.
       - run: npm run build
         env:
+          # копия на perizat0396.github.io/ai-ustaz/ открывается из подпапки
+          BASE_PATH: /ai-ustaz/
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # SPA-фолбэк: любой глубокий URL (ai-ustaz.vku.edu.kz/generate) GitHub Pages
+      # SPA-фолбэк: любой глубокий URL (/ai-ustaz/generate) GitHub Pages
       # отдаёт как 404 -> подсовываем ему index.html, дальше роутер сам разберётся.
       - run: cp dist/index.html dist/404.html
 

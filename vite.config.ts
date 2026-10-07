@@ -4,10 +4,11 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-// В проде сайт открывается с собственного домена https://ai-ustaz.vku.edu.kz/
-// (корень домена), поэтому базовый путь — «/» и в dev, и в сборке.
+// Основной сайт открывается с корня домена https://ai-ustaz.vku.edu.kz/,
+// поэтому базовый путь по умолчанию — «/». Копия на GitHub Pages живёт
+// в подпапке (/ai-ustaz/) — её сборка в CI передаёт путь через BASE_PATH.
 export default defineConfig(() => ({
-  base: '/',
+  base: process.env.BASE_PATH || '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
