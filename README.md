@@ -2,7 +2,7 @@
 
 Платформа для ИИ-генерации учебных материалов и обмена ими в сообществе преподавателей.
 
-Сайт: **https://ai-ustaz.vku.edu.kz** · Код: **https://github.com/perizat0396/ai-ustaz2**
+Сайт: **https://ai-ustaz.vku.edu.kz** · Код: **https://github.com/perizat0396/ai-ustaz**
 
 > Ключи и секреты в репозиторий не входят: Supabase-ключи — в `.env.local` (шаблон
 > `.env.local.example`), ключ Gemini — в секретах Supabase (`supabase secrets set`).
