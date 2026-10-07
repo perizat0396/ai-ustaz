@@ -8,6 +8,18 @@ pnpm-debug.log*
 
 node_modules
 dist
+
+# Секреты и служебные файлы Supabase CLI (id проекта, адрес БД)
+.env
+.env.*
+!.env.local.example
+supabase/.temp/
+supabase/.branches/
+
+# Личные документы, не относящиеся к коду
+*.docx
+*.pdf
+!public/uchebnik/*.pdf
 dist-ssr
 *.local
 

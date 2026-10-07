@@ -1,20 +1,22 @@
 import { NavLink, Link } from 'react-router-dom'
 import { cx } from '@/lib/utils'
-import { useStore } from '@/lib/store'
+import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
 import { useTheme } from '@/hooks/useTheme'
 import { Avatar, Button } from './ui'
-import { IconCompass, IconLibrary, IconMoon, IconSpark, IconSun, IconUser } from './Icon'
+import { IconBookOpen, IconChartBar, IconCompass, IconLibrary, IconMoon, IconSpark, IconSun, IconUser } from './Icon'
+import { LogoMark } from './Logo'
 
 const links = [
   { to: '/generate', key: 'nav.generate', icon: IconSpark },
   { to: '/community', key: 'nav.community', icon: IconCompass },
   { to: '/library', key: 'nav.library', icon: IconLibrary },
+  { to: '/textbook', key: 'nav.textbook', icon: IconBookOpen },
   { to: '/profile', key: 'nav.profile', icon: IconUser },
 ] as const
 
 export function Navbar() {
-  const { user } = useStore()
+  const { session, profile, isAdmin } = useAuth()
   const { theme, toggle } = useTheme()
   const { t, lang, setLang } = useI18n()
 
@@ -22,9 +24,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4">
         <Link to="/" className="flex items-center gap-2 font-extrabold tracking-tight">
-          <span className="grid size-8 place-items-center rounded-lg bg-brand-600 text-white">
-            <IconSpark width={18} height={18} />
-          </span>
+          <LogoMark size={32} />
           <span className="text-slate-900 dark:text-white">
             AI <span className="text-brand-600 dark:text-brand-400">Ustaz</span>
           </span>
@@ -88,9 +88,27 @@ export function Navbar() {
             </Button>
           </Link>
 
-          <Link to="/profile" className="flex items-center gap-2">
-            <Avatar name={user.name} color={user.avatarColor} size={32} />
-          </Link>
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 sm:flex dark:text-slate-300 dark:hover:bg-slate-800"
+              title={t('admin.title')}
+            >
+              <IconChartBar width={17} height={17} />
+            </Link>
+          )}
+
+          {session && profile ? (
+            <Link to="/profile" className="flex items-center gap-2">
+              <Avatar name={profile.name} color={profile.avatarColor} size={32} />
+            </Link>
+          ) : (
+            <Link to="/login">
+              <Button size="sm" variant="secondary">
+                {t('auth.signIn')}
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 

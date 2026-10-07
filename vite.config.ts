@@ -4,11 +4,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-// В проде (GitHub Pages) сайт живёт по адресу /ai-ustaz2/ — базовый путь
-// нужен, иначе ассеты грузятся с корня и получается белый экран.
-// В dev остаётся «/», чтобы локально ничего не менялось.
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/ai-ustaz2/' : '/',
+// В проде сайт открывается с собственного домена https://ai-ustaz.vku.edu.kz/
+// (корень домена), поэтому базовый путь — «/» и в dev, и в сборке.
+export default defineConfig(() => ({
+  base: '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -16,7 +15,7 @@ export default defineConfig(({ command }) => ({
     },
   },
   server: {
-    port: 5173,
+    port: Number(process.env.PORT) || 5173,
     open: true,
   },
 }))

@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
-import type { ContextSource, Lang, OllamaSettings } from '@/types'
+import { useRef, useState, type ReactNode } from 'react'
+import type { ContextSource, Lang } from '@/types'
 import { cx, formatBytes, uid } from '@/lib/utils'
-import { chatComplete, type ChatMsg } from '@/lib/ollama'
+import { chatComplete, type ChatMsg } from '@/lib/ai'
 import { useI18n } from '@/lib/i18n'
 import { Button, Spinner } from './ui'
 import { IconCheck, IconFile, IconPlus, IconSpark, IconTrash, IconUpload } from './Icon'
@@ -34,18 +34,14 @@ async function readFile(file: File): Promise<{ text: string; ok: boolean }> {
 export function SourcePicker({
   sources,
   onChange,
-  ollama,
-  ollamaOk,
   lang,
 }: {
   sources: ContextSource[]
   onChange: (next: ContextSource[]) => void
-  ollama: OllamaSettings
-  ollamaOk: boolean | null
   lang: Lang
 }) {
   const { t } = useI18n()
-  const [tab, setTab] = useState<'file' | 'chat'>('file')
+  const [tab, setTab] = useState<'chat' | 'file'>('chat')
   const add = (s: ContextSource) => onChange([...sources, s])
   const remove = (id: string) => onChange(sources.filter((s) => s.id !== id))
 
@@ -54,7 +50,7 @@ export function SourcePicker({
       <p className="text-sm text-slate-500 dark:text-slate-400">{t('gen.dataIntro')}</p>
 
       <div className="grid grid-cols-2 gap-2">
-        {(['file', 'chat'] as const).map((k) => (
+        {(['chat', 'file'] as const).map((k) => (
           <button
             key={k}
             onClick={() => setTab(k)}
@@ -71,8 +67,8 @@ export function SourcePicker({
         ))}
       </div>
 
+      {tab === 'chat' && <ChatPanel add={add} lang={lang} />}
       {tab === 'file' && <FilePanel add={add} />}
-      {tab === 'chat' && <ChatPanel add={add} ollama={ollama} ollamaOk={ollamaOk} lang={lang} />}
 
       {sources.length > 0 && (
         <div>
@@ -213,17 +209,96 @@ function FilePanel({ add }: { add: (s: ContextSource) => void }) {
   )
 }
 
-function ChatPanel({
-  add,
-  ollama,
-  ollamaOk,
-  lang,
-}: {
-  add: (s: ContextSource) => void
-  ollama: OllamaSettings
-  ollamaOk: boolean | null
-  lang: Lang
-}) {
+/** Что включить в материал — чекбоксы в форме-опроснике. */
+const INCLUDE_KEYS = ['definitions', 'facts', 'examples', 'dates', 'formulas', 'terms', 'questions', 'misconceptions'] as const
+/** Объём ответа. */
+const VOLUME_KEYS = ['short', 'detailed', 'max'] as const
+/** Готовые уточнения после ответа — педагогу не нужно придумывать формулировку. */
+const FOLLOWUP_KEYS = ['more', 'examples', 'simpler', 'deeper', 'questions', 'table'] as const
+
+/**
+ * Собирает из ответов формы подробный запрос к ИИ: учителю не нужно уметь
+ * писать промты — достаточно ответить на вопросы.
+ */
+function buildGuidedPrompt(
+  f: { topic: string; audience: string; goal: string; include: Set<string>; volume: string; extra: string },
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
+  const lines = [t('src.q.prompt.topic', { v: f.topic.trim() })]
+  if (f.audience.trim()) lines.push(t('src.q.prompt.audience', { v: f.audience.trim() }))
+  if (f.goal.trim()) lines.push(t('src.q.prompt.goal', { v: f.goal.trim() }))
+  if (f.include.size) {
+    lines.push(
+      t('src.q.prompt.include', {
+        v: INCLUDE_KEYS.filter((k) => f.include.has(k)).map((k) => t(`src.q.inc.${k}`)).join(', '),
+      }),
+    )
+  }
+  lines.push(t(`src.q.prompt.volume.${f.volume}`))
+  if (f.extra.trim()) lines.push(t('src.q.prompt.extra', { v: f.extra.trim() }))
+  return lines.join('\n')
+}
+
+/** **жирный** и *курсив* внутри строки. */
+function inlineMd(text: string): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*|\*[^*\s][^*]*\*)/g).map((part, i) =>
+    part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
+      <strong key={i} className="font-semibold text-slate-900 dark:text-white">
+        {part.slice(2, -2)}
+      </strong>
+    ) : part.startsWith('*') && part.endsWith('*') && part.length > 2 ? (
+      <em key={i}>{part.slice(1, -1)}</em>
+    ) : (
+      part
+    ),
+  )
+}
+
+/**
+ * Ответ ИИ приходит в Markdown (заголовки, списки, **жирный**) — показываем
+ * его оформленным, а не со значками. В источники уходит исходный текст.
+ */
+function ChatAnswer({ text }: { text: string }) {
+  return (
+    <div className="space-y-1.5 leading-relaxed">
+      {text.split('\n').map((raw, i) => {
+        const line = raw.trimEnd()
+        if (!line.trim()) return <div key={i} className="h-1" />
+        const h = line.match(/^#{1,6}\s+(.*)$/)
+        if (h) {
+          return (
+            <p key={i} className="pt-2 font-bold text-slate-900 dark:text-white">
+              {inlineMd(h[1])}
+            </p>
+          )
+        }
+        if (/^\s*([-*_]\s*){3,}$/.test(line)) return <hr key={i} className="border-slate-200 dark:border-slate-700" />
+        const li = line.match(/^(\s*)([-*•]|\d+[.)])\s+(.*)$/)
+        if (li) {
+          const indent = Math.min(3, Math.floor(li[1].length / 2))
+          const marker = /\d/.test(li[2]) ? li[2] : '•'
+          return (
+            <div key={i} className="flex gap-2" style={{ paddingLeft: `${indent * 1.25}rem` }}>
+              <span className="shrink-0 text-slate-400">{marker}</span>
+              <span>{inlineMd(li[3])}</span>
+            </div>
+          )
+        }
+        return <p key={i}>{inlineMd(line)}</p>
+      })}
+    </div>
+  )
+}
+
+const chipCls = (active: boolean) =>
+  cx(
+    'rounded-full border px-3 py-1 text-xs font-medium transition',
+    active
+      ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-200'
+      : 'border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-300',
+  )
+
+function ChatPanel({ add, lang }: { add: (s: ContextSource) => void; lang: Lang }) {
   const { t } = useI18n()
   const [msgs, setMsgs] = useState<ChatMsg[]>([])
   const [input, setInput] = useState('')
@@ -231,16 +306,22 @@ function ChatPanel({
   const [err, setErr] = useState<string | null>(null)
   const [used, setUsed] = useState<Set<number>>(new Set())
 
-  const send = async () => {
-    const q = input.trim()
-    if (!q || busy) return
+  // Форма-опросник
+  const [topic, setTopic] = useState('')
+  const [audience, setAudience] = useState('')
+  const [goal, setGoal] = useState('')
+  const [include, setInclude] = useState<Set<string>>(new Set(['definitions', 'facts', 'examples']))
+  const [volume, setVolume] = useState<string>('detailed')
+  const [extra, setExtra] = useState('')
+
+  const ask = async (q: string) => {
+    if (!q.trim() || busy) return
     setErr(null)
-    const next: ChatMsg[] = [...msgs, { role: 'user', content: q }]
+    const next: ChatMsg[] = [...msgs, { role: 'user', content: q.trim() }]
     setMsgs(next)
-    setInput('')
     setBusy(true)
     try {
-      const reply = await chatComplete(next, ollama, lang)
+      const reply = await chatComplete(next, lang)
       setMsgs([...next, { role: 'assistant', content: reply }])
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e))
@@ -249,18 +330,111 @@ function ChatPanel({
     }
   }
 
-  return (
-    <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
-      <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">{t('src.chat.intro')}</p>
+  const send = () => {
+    const q = input.trim()
+    if (!q) return
+    setInput('')
+    void ask(q)
+  }
 
-      {ollamaOk === false && (
-        <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-          {t('src.chat.needAi')}
-        </p>
-      )}
+  const toggleInclude = (k: string) =>
+    setInclude((prev) => {
+      const n = new Set(prev)
+      if (n.has(k)) n.delete(k)
+      else n.add(k)
+      return n
+    })
+
+  const lastIsAssistant = msgs.length > 0 && msgs[msgs.length - 1].role === 'assistant'
+  const labelCls = 'mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300'
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+      <p className="text-xs text-slate-500 dark:text-slate-400">{t('src.chat.intro')}</p>
+
+      {/* Опросник: заполняется вместо написания промта */}
+      <form
+        className="space-y-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/40"
+        onSubmit={(e) => {
+          e.preventDefault()
+          void ask(buildGuidedPrompt({ topic, audience, goal, include, volume, extra }, t))
+        }}
+      >
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t('src.q.title')}</p>
+
+        <label className="block">
+          <span className={labelCls}>{t('src.q.topic')} *</span>
+          <input
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder={t('src.q.topicPh')}
+            className="input-base"
+            required
+          />
+        </label>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className={labelCls}>{t('src.q.audience')}</span>
+            <input
+              value={audience}
+              onChange={(e) => setAudience(e.target.value)}
+              placeholder={t('src.q.audiencePh')}
+              className="input-base"
+            />
+          </label>
+          <label className="block">
+            <span className={labelCls}>{t('src.q.goal')}</span>
+            <input
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              placeholder={t('src.q.goalPh')}
+              className="input-base"
+            />
+          </label>
+        </div>
+
+        <div>
+          <span className={labelCls}>{t('src.q.include')}</span>
+          <div className="flex flex-wrap gap-2">
+            {INCLUDE_KEYS.map((k) => (
+              <button key={k} type="button" onClick={() => toggleInclude(k)} className={chipCls(include.has(k))}>
+                {include.has(k) && '✓ '}
+                {t(`src.q.inc.${k}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <span className={labelCls}>{t('src.q.volume')}</span>
+          <div className="flex flex-wrap gap-2">
+            {VOLUME_KEYS.map((k) => (
+              <button key={k} type="button" onClick={() => setVolume(k)} className={chipCls(volume === k)}>
+                {t(`src.q.vol.${k}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label className="block">
+          <span className={labelCls}>{t('src.q.extra')}</span>
+          <textarea
+            value={extra}
+            onChange={(e) => setExtra(e.target.value)}
+            rows={2}
+            placeholder={t('src.q.extraPh')}
+            className="input-base resize-none"
+          />
+        </label>
+
+        <Button type="submit" disabled={busy || !topic.trim()}>
+          {busy ? <Spinner /> : <IconSpark width={15} height={15} />} {t('src.q.submit')}
+        </Button>
+      </form>
 
       {msgs.length > 0 && (
-        <div className="mb-3 max-h-96 space-y-3 overflow-y-auto pr-1">
+        <div className="max-h-[32rem] space-y-3 overflow-y-auto pr-1">
           {msgs.map((m, i) => (
             <div
               key={i}
@@ -271,7 +445,11 @@ function ChatPanel({
                   : 'bg-slate-50 text-slate-700 dark:bg-slate-800/60 dark:text-slate-200',
               )}
             >
-              <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+              {m.role === 'assistant' ? (
+                <ChatAnswer text={m.content} />
+              ) : (
+                <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+              )}
               {m.role === 'assistant' && (
                 <Button
                   size="sm"
@@ -283,7 +461,7 @@ function ChatPanel({
                       id: uid('src'),
                       kind: 'search',
                       title: t('src.tab.chat'),
-                      detail: ollama.models[lang],
+                      detail: 'AI Ustaz',
                       excerpt: m.content,
                       addedAt: Date.now(),
                     })
@@ -305,24 +483,41 @@ function ChatPanel({
         </div>
       )}
 
+      {/* Быстрые уточнения к последнему ответу */}
+      {lastIsAssistant && !busy && (
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">{t('src.fu.title')}</p>
+          <div className="flex flex-wrap gap-2">
+            {FOLLOWUP_KEYS.map((k) => (
+              <button key={k} type="button" onClick={() => void ask(t(`src.fu.${k}.prompt`))} className={chipCls(false)}>
+                {t(`src.fu.${k}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {err && (
-        <pre className="mb-2 whitespace-pre-wrap rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+        <pre className="whitespace-pre-wrap rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
           {err}
         </pre>
       )}
 
-      <div className="flex gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && send()}
-          placeholder={t('src.chat.placeholder')}
-          className="input-base"
-          disabled={busy}
-        />
-        <Button onClick={send} disabled={busy || !input.trim()}>
-          {busy ? <Spinner /> : t('src.chat.send')}
-        </Button>
+      <div>
+        <p className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">{t('src.chat.free')}</p>
+        <div className="flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && send()}
+            placeholder={t('src.chat.placeholder')}
+            className="input-base"
+            disabled={busy}
+          />
+          <Button onClick={send} disabled={busy || !input.trim()}>
+            {busy ? <Spinner /> : t('src.chat.send')}
+          </Button>
+        </div>
       </div>
     </div>
   )

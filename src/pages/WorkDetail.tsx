@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { classForType, cx, formatDate, timeAgo } from '@/lib/utils'
 import { useStore } from '@/lib/store'
+import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
 import { MaterialRenderer } from '@/components/MaterialRenderer'
+import { OwnerActions } from '@/components/OwnerActions'
 import { TypeIcon } from '@/components/TypeIcon'
 import { Avatar, Badge, Button, EmptyState } from '@/components/ui'
 import {
@@ -20,9 +22,19 @@ import {
 export function WorkDetail() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  const { getWork, toggleLike, toggleSave, addComment, addView, user } = useStore()
-  const { t, lang, tType, tInst, tLang, tDiff, tSubject, tGrade } = useI18n()
+  const { getWork, toggleLike, toggleSave, addComment, addView } = useStore()
+  const { session, profile } = useAuth()
+  const { t, lang, tType, tInst, tLang, tDiff, tSubject, tGrade, tTitle, tSummary, tRole } = useI18n()
   const work = getWork(id)
+  const [actionError, setActionError] = useState<string | null>(null)
+
+  const requireLogin = (fn: () => Promise<unknown>) => {
+    if (!session) {
+      navigate('/login')
+      return
+    }
+    fn().catch((e) => setActionError(e instanceof Error ? e.message : String(e)))
+  }
 
   const viewed = useRef(false)
   useEffect(() => {
@@ -71,27 +83,25 @@ export function WorkDetail() {
             <Badge className={classForType(m.type)}>
               <TypeIcon type={m.type} size={13} /> {tType(m.type)}
             </Badge>
-            <h1 className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">{m.title}</h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{m.summary}</p>
+            <h1 className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">{tTitle(m)}</h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{tSummary(m)}</p>
           </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-1.5">
-          <Badge>{tSubject(m.subject)}</Badge>
-          <Badge>
-            {tInst(m.institution)} · {tGrade(m.grade)}
-          </Badge>
+          {m.subject && <Badge>{tSubject(m.subject)}</Badge>}
+          {m.grade && (
+            <Badge>
+              {tInst(m.institution)} · {tGrade(m.grade)}
+            </Badge>
+          )}
           <Badge>{tLang(m.language)}</Badge>
-          <Badge>
-            {t('work.difficultyPrefix')}: {tDiff(m.difficulty)}
-          </Badge>
-          <Badge
-            className={
-              m.engine?.startsWith('Ollama')
-                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
-                : undefined
-            }
-          >
+          {m.grade && (
+            <Badge>
+              {t('work.difficultyPrefix')}: {tDiff(m.difficulty)}
+            </Badge>
+          )}
+          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
             {m.engine ?? t('engine.demo')}
           </Badge>
           {m.tags.slice(0, 5).map((tag) => (
@@ -107,7 +117,7 @@ export function WorkDetail() {
                 {work.author.name}
               </p>
               <p className="text-xs text-slate-400">
-                {work.author.role} · {formatDate(work.publishedAt, lang)}
+                {tRole(work.author.role)} · {formatDate(work.publishedAt, lang)}
               </p>
             </div>
           </div>
@@ -116,7 +126,7 @@ export function WorkDetail() {
             <Button
               size="sm"
               variant={work.likedByMe ? 'primary' : 'secondary'}
-              onClick={() => toggleLike(work.id)}
+              onClick={() => requireLogin(() => toggleLike(work.id))}
             >
               <IconHeart width={15} height={15} fill={work.likedByMe ? 'currentColor' : 'none'} />
               {work.likes}
@@ -124,7 +134,7 @@ export function WorkDetail() {
             <Button
               size="sm"
               variant={work.savedByMe ? 'primary' : 'secondary'}
-              onClick={() => toggleSave(work.id)}
+              onClick={() => requireLogin(() => toggleSave(work.id))}
             >
               <IconBookmark width={15} height={15} fill={work.savedByMe ? 'currentColor' : 'none'} />
               {work.savedByMe ? t('work.saved') : t('work.save')}
@@ -149,6 +159,12 @@ export function WorkDetail() {
           </span>
         </div>
       </div>
+
+      {profile && work.author.id === profile.id && (
+        <div className="card p-4">
+          <OwnerActions work={work} onDone={() => navigate('/profile')} />
+        </div>
+      )}
 
       <MaterialRenderer material={m} />
 
@@ -226,7 +242,7 @@ export function WorkDetail() {
         </p>
 
         <div className="mb-4 flex gap-3">
-          <Avatar name={user.name} color={user.avatarColor} size={32} />
+          <Avatar name={profile?.name ?? '—'} color={profile?.avatarColor ?? '#94a3b8'} size={32} />
           <div className="flex-1">
             <textarea
               value={comment}
@@ -239,16 +255,24 @@ export function WorkDetail() {
               <Button
                 size="sm"
                 disabled={!comment.trim()}
-                onClick={() => {
-                  addComment(work.id, comment.trim())
-                  setComment('')
-                }}
+                onClick={() =>
+                  requireLogin(async () => {
+                    await addComment(work.id, comment.trim())
+                    setComment('')
+                  })
+                }
               >
                 {t('common.send')}
               </Button>
             </div>
           </div>
         </div>
+
+        {actionError && (
+          <p className="mb-3 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+            {actionError}
+          </p>
+        )}
 
         {work.comments.length === 0 ? (
           <p className="text-sm text-slate-400">{t('work.noComments')}</p>

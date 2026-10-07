@@ -12,7 +12,7 @@ type Sort = 'new' | 'popular' | 'discussed'
 const ALL = '__all__'
 
 export function Community() {
-  const { works } = useStore()
+  const { works, loadError } = useStore()
   const { t, tType, tSubject } = useI18n()
 
   const [query, setQuery] = useState('')
@@ -54,6 +54,12 @@ export function Community() {
           </Button>
         </Link>
       </div>
+
+      {loadError && (
+        <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+          {loadError}
+        </p>
+      )}
 
       {/* Filters */}
       <div className="card space-y-3 p-4">

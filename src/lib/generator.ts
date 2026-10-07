@@ -2,9 +2,7 @@ import type { ContextSource, GenerationParams, Material, MaterialContent } from 
 import { extractKeywords, uid } from './utils'
 
 /* --------------------------------------------------------------------------
- *  Сборка объекта Material из содержимого, полученного от локального ИИ
- *  (src/lib/ollama.ts). Демо-генератора больше нет — материалы делает только
- *  реальная модель через Ollama.
+ *  Сборка объекта Material из содержимого, полученного от ИИ (src/lib/ai.ts).
  * ----------------------------------------------------------------------- */
 
 export interface GenProgress {
@@ -32,17 +30,21 @@ export function buildMaterial(
 ): Material {
   const { engine, keywords } = opts
   const kk = params.language === 'kk'
-  const topic = params.topic?.trim() || (kk ? 'Жаңа тақырып' : 'Новая тема')
   const kw = keywords ?? extractKeywords(corpusFrom(params, sources), 12)
-  const tags = Array.from(new Set([params.subject, ...kw.slice(0, 4)])).map((t) => t.toLowerCase())
+  const tags = Array.from(new Set([params.subject, ...kw.slice(0, 4)].filter(Boolean))).map((t) =>
+    t.toLowerCase(),
+  )
   const title = opts.title?.trim() || fallbackTitle(params, kw)
+  // Тема для текста описания: своя, если указана, иначе — тема, которую по содержанию
+  // определил сам ИИ (title ответа), и только в крайнем случае — общая заглушка.
+  const topic = params.topic?.trim() || title || (kk ? 'Жаңа тақырып' : 'Новая тема')
   const keyList = kw.slice(0, 5).join(', ') || '—'
 
   const summary = kk
-    ? `«${topic}» тақырыбы бойынша ${sources.length} дереккөз негізінде жасалды. Модель: ${engine}. Негізгі ұғымдар: ${keyList}.`
-    : `По теме «${topic}» на основе ${sources.length} ${
+    ? `«${topic}» тақырыбы бойынша ${sources.length} дереккөз негізінде ЖИ жасады. Негізгі ұғымдар: ${keyList}.`
+    : `По теме «${topic}» — сгенерировано ИИ на основе ${sources.length} ${
         sources.length === 1 ? 'источника' : 'источников'
-      }. Модель: ${engine}. Ключевые понятия: ${keyList}.`
+      }. Ключевые понятия: ${keyList}.`
 
   return {
     id: uid('mat'),

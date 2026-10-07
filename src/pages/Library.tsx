@@ -103,7 +103,7 @@ function TabButton({
   )
 }
 
-function DraftCard({ draft }: { draft: Material }) {
+export function DraftCard({ draft }: { draft: Material }) {
   const { publish, deleteDraft } = useStore()
   const { t, lang, tType, tInst, tGrade, tSubject } = useI18n()
   const [open, setOpen] = useState(false)
@@ -125,11 +125,11 @@ function DraftCard({ draft }: { draft: Material }) {
           <Button size="sm" variant="secondary" onClick={() => setOpen((o) => !o)}>
             {open ? t('common.collapse') : t('common.open')}
           </Button>
-          <Button size="sm" onClick={() => publish(draft)}>
+          <Button size="sm" onClick={() => void publish(draft)}>
             {t('common.publish')}
           </Button>
           <button
-            onClick={() => deleteDraft(draft.id)}
+            onClick={() => void deleteDraft(draft.id)}
             className="rounded-lg p-2 text-slate-300 hover:text-rose-500"
             aria-label="×"
           >

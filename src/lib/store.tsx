@@ -1,227 +1,347 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
-  useReducer,
+  useState,
   type ReactNode,
 } from 'react'
-import type { Comment, Contribution, Material, OllamaSettings, UserRef, Work } from '@/types'
-import { CURRENT_USER, seedWorks } from './mockData'
-import { DEFAULT_OLLAMA_SETTINGS } from './ollama'
-import { uid } from './utils'
+import type { Comment, Contribution, Material, UserRef, Work } from '@/types'
+import { useAuth } from './auth'
+import { supabase } from './supabase'
 
-const STORAGE_KEY = 'ai-ustaz:v2'
+/* --------------------------------------------------------------------------
+ *  Данные сообщества — теперь общая база (Supabase), а не localStorage.
+ *  Черновики принадлежат пользователю (таблица drafts), публикации видны
+ *  всем (таблица works + likes/saves/comments/contributions).
+ * ----------------------------------------------------------------------- */
 
-interface State {
-  user: UserRef
+type ProfileRow = { id: string; name: string; role: string; avatar_color: string }
+
+function toUserRef(p: ProfileRow | null | undefined): UserRef {
+  if (!p) return { id: '', name: '—', role: '', avatarColor: '#94a3b8' }
+  return { id: p.id, name: p.name, role: p.role, avatarColor: p.avatar_color }
+}
+
+async function loadWorks(userId: string | undefined): Promise<Work[]> {
+  const { data: workRows, error } = await supabase
+    .from('works')
+    .select(
+      'id, material, published_at, views, forked_from_id, forked_from_title, forked_from_author, author:profiles!works_author_id_fkey(id, name, role, avatar_color)',
+    )
+    .order('published_at', { ascending: false })
+  if (error) throw new Error(error.message)
+  const rows = (workRows ?? []) as unknown as Array<{
+    id: string
+    material: Material
+    published_at: string
+    views: number
+    forked_from_id: string | null
+    forked_from_title: string | null
+    forked_from_author: string | null
+    author: ProfileRow | null
+  }>
+  const ids = rows.map((w) => w.id)
+  if (ids.length === 0) return []
+
+  const [{ data: likeRows }, { data: commentRows }, { data: contribRows }, saveRes] =
+    await Promise.all([
+      supabase.from('likes').select('work_id, user_id').in('work_id', ids),
+      supabase
+        .from('comments')
+        .select('id, work_id, body, created_at, author:profiles!comments_author_id_fkey(id, name, role, avatar_color)')
+        .in('work_id', ids)
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('contributions')
+        .select(
+          'id, work_id, note, added_items, status, created_at, author:profiles!contributions_author_id_fkey(id, name, role, avatar_color)',
+        )
+        .in('work_id', ids)
+        .order('created_at', { ascending: true }),
+      userId
+        ? supabase.from('saves').select('work_id').eq('user_id', userId).in('work_id', ids)
+        : Promise.resolve({ data: [] as Array<{ work_id: string }> }),
+    ])
+
+  const likesByWork = new Map<string, number>()
+  const likedByMe = new Set<string>()
+  for (const l of likeRows ?? []) {
+    likesByWork.set(l.work_id, (likesByWork.get(l.work_id) ?? 0) + 1)
+    if (userId && l.user_id === userId) likedByMe.add(l.work_id)
+  }
+  const savedByMe = new Set((saveRes.data ?? []).map((s) => s.work_id))
+
+  const commentsByWork = new Map<string, Comment[]>()
+  for (const c of (commentRows ?? []) as unknown as Array<{
+    id: string
+    work_id: string
+    body: string
+    created_at: string
+    author: ProfileRow | null
+  }>) {
+    const list = commentsByWork.get(c.work_id) ?? []
+    list.push({ id: c.id, author: toUserRef(c.author), body: c.body, createdAt: Date.parse(c.created_at) })
+    commentsByWork.set(c.work_id, list)
+  }
+
+  const contribByWork = new Map<string, Contribution[]>()
+  for (const c of (contribRows ?? []) as unknown as Array<{
+    id: string
+    work_id: string
+    note: string
+    added_items: number
+    status: 'pending' | 'merged'
+    created_at: string
+    author: ProfileRow | null
+  }>) {
+    const list = contribByWork.get(c.work_id) ?? []
+    list.push({
+      id: c.id,
+      author: toUserRef(c.author),
+      note: c.note,
+      addedItems: c.added_items,
+      status: c.status,
+      createdAt: Date.parse(c.created_at),
+    })
+    contribByWork.set(c.work_id, list)
+  }
+
+  return rows.map((w) => ({
+    id: w.id,
+    material: w.material,
+    author: toUserRef(w.author),
+    publishedAt: Date.parse(w.published_at),
+    likes: likesByWork.get(w.id) ?? 0,
+    likedByMe: likedByMe.has(w.id),
+    savedByMe: savedByMe.has(w.id),
+    views: w.views,
+    comments: commentsByWork.get(w.id) ?? [],
+    contributions: contribByWork.get(w.id) ?? [],
+    forkedFrom: w.forked_from_id
+      ? { id: w.forked_from_id, title: w.forked_from_title ?? '', author: w.forked_from_author ?? '' }
+      : undefined,
+  }))
+}
+
+async function loadDrafts(userId: string): Promise<Material[]> {
+  const { data, error } = await supabase
+    .from('drafts')
+    .select('id, material')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: false })
+  if (error) throw new Error(error.message)
+  // id черновика в БД — отдельная строка; id материала внутри material сохраняем как есть,
+  // но подставляем id строки, чтобы deleteDraft/addDraft били по одной и той же таблице.
+  return (data ?? []).map((d) => ({ ...(d.material as Material), id: d.id }))
+}
+
+interface StoreValue {
   works: Work[]
   drafts: Material[]
-  ollama: OllamaSettings
-}
-
-type Action =
-  | { type: 'HYDRATE'; state: State }
-  | { type: 'ADD_DRAFT'; material: Material }
-  | { type: 'DELETE_DRAFT'; id: string }
-  | { type: 'PUBLISH'; material: Material; forkedFrom?: Work }
-  | { type: 'TOGGLE_LIKE'; id: string }
-  | { type: 'TOGGLE_SAVE'; id: string }
-  | { type: 'ADD_VIEW'; id: string }
-  | { type: 'ADD_COMMENT'; id: string; body: string }
-  | { type: 'ADD_CONTRIBUTION'; id: string; note: string; addedItems: number }
-  | { type: 'SET_OLLAMA'; patch: Partial<OllamaSettings> }
-  | { type: 'RESET' }
-
-function initialState(): State {
-  return { user: CURRENT_USER, works: seedWorks(), drafts: [], ollama: DEFAULT_OLLAMA_SETTINGS }
-}
-
-// Модели, которые больше не поддерживаются (недоступный gated-путь KazLLM,
-// сломанный локальный импорт). Если в localStorage сохранён такой —
-// молча заменяем на дефолтную, иначе генерация/чат падают с 404.
-const DEAD_MODELS = /kazllm|issai|KazLLM/i
-
-function healModel(name: string | undefined, fallback: string): string {
-  const v = (name ?? '').trim()
-  if (!v || DEAD_MODELS.test(v)) return fallback
-  return v
-}
-
-function load(): State {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return initialState()
-    const parsed = JSON.parse(raw) as Partial<State>
-    if (!parsed.works || !parsed.user) return initialState()
-    const def = DEFAULT_OLLAMA_SETTINGS
-    return {
-      user: parsed.user,
-      works: parsed.works,
-      drafts: parsed.drafts ?? [],
-      ollama: {
-        ...def,
-        ...parsed.ollama,
-        models: {
-          kk: healModel(parsed.ollama?.models?.kk, def.models.kk),
-          ru: healModel(parsed.ollama?.models?.ru, def.models.ru),
-        },
-      },
-    }
-  } catch {
-    return initialState()
-  }
-}
-
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case 'HYDRATE':
-      return action.state
-
-    case 'ADD_DRAFT':
-      return { ...state, drafts: [action.material, ...state.drafts] }
-
-    case 'DELETE_DRAFT':
-      return { ...state, drafts: state.drafts.filter((d) => d.id !== action.id) }
-
-    case 'PUBLISH': {
-      const work: Work = {
-        id: uid('work'),
-        material: action.material,
-        author: state.user,
-        publishedAt: Date.now(),
-        likes: 0,
-        likedByMe: false,
-        savedByMe: false,
-        views: 0,
-        comments: [],
-        contributions: [],
-        forkedFrom: action.forkedFrom
-          ? {
-              id: action.forkedFrom.id,
-              title: action.forkedFrom.material.title,
-              author: action.forkedFrom.author.name,
-            }
-          : undefined,
-      }
-      return {
-        ...state,
-        works: [work, ...state.works],
-        drafts: state.drafts.filter((d) => d.id !== action.material.id),
-      }
-    }
-
-    case 'TOGGLE_LIKE':
-      return {
-        ...state,
-        works: state.works.map((w) =>
-          w.id === action.id
-            ? { ...w, likedByMe: !w.likedByMe, likes: w.likes + (w.likedByMe ? -1 : 1) }
-            : w,
-        ),
-      }
-
-    case 'TOGGLE_SAVE':
-      return {
-        ...state,
-        works: state.works.map((w) =>
-          w.id === action.id ? { ...w, savedByMe: !w.savedByMe } : w,
-        ),
-      }
-
-    case 'ADD_VIEW':
-      return {
-        ...state,
-        works: state.works.map((w) => (w.id === action.id ? { ...w, views: w.views + 1 } : w)),
-      }
-
-    case 'ADD_COMMENT': {
-      const comment: Comment = {
-        id: uid('cm'),
-        author: state.user,
-        body: action.body,
-        createdAt: Date.now(),
-      }
-      return {
-        ...state,
-        works: state.works.map((w) =>
-          w.id === action.id ? { ...w, comments: [...w.comments, comment] } : w,
-        ),
-      }
-    }
-
-    case 'ADD_CONTRIBUTION': {
-      const contribution: Contribution = {
-        id: uid('co'),
-        author: state.user,
-        note: action.note,
-        addedItems: action.addedItems,
-        status: 'pending',
-        createdAt: Date.now(),
-      }
-      return {
-        ...state,
-        works: state.works.map((w) =>
-          w.id === action.id ? { ...w, contributions: [...w.contributions, contribution] } : w,
-        ),
-      }
-    }
-
-    case 'SET_OLLAMA':
-      return { ...state, ollama: { ...state.ollama, ...action.patch } }
-
-    case 'RESET':
-      return { ...initialState(), ollama: state.ollama }
-
-    default:
-      return state
-  }
-}
-
-interface StoreValue extends State {
-  addDraft: (m: Material) => void
-  deleteDraft: (id: string) => void
-  publish: (m: Material, forkedFrom?: Work) => void
-  toggleLike: (id: string) => void
-  toggleSave: (id: string) => void
-  addView: (id: string) => void
-  addComment: (id: string, body: string) => void
-  addContribution: (id: string, note: string, addedItems: number) => void
-  setOllama: (patch: Partial<OllamaSettings>) => void
-  reset: () => void
+  loading: boolean
+  loadError: string | null
+  addDraft: (m: Material) => Promise<void>
+  deleteDraft: (id: string) => Promise<void>
+  /** Удалить свою публикацию (вместе с комментариями, лайками и дополнениями). */
+  deleteWork: (id: string) => Promise<void>
+  /** Снять свою публикацию с сообщества: материал возвращается в черновики. */
+  unpublishWork: (id: string) => Promise<void>
+  publish: (m: Material, forkedFrom?: Work) => Promise<void>
+  toggleLike: (id: string) => Promise<void>
+  toggleSave: (id: string) => Promise<void>
+  addView: (id: string) => Promise<void>
+  addComment: (id: string, body: string) => Promise<void>
+  addContribution: (id: string, note: string, addedItems: number) => Promise<void>
   getWork: (id: string) => Work | undefined
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, undefined, load)
+  const { session, profile } = useAuth()
+  const userId = session?.user?.id
+  const [works, setWorks] = useState<Work[]>([])
+  const [drafts, setDrafts] = useState<Material[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  const refreshWorks = useCallback(async () => {
+    setWorks(await loadWorks(userId))
+  }, [userId])
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    } catch {
-      /* quota / private mode — молча игнорируем */
+    let cancelled = false
+    setLoading(true)
+    setLoadError(null)
+    Promise.all([loadWorks(userId), userId ? loadDrafts(userId) : Promise.resolve([])])
+      .then(([w, d]) => {
+        if (cancelled) return
+        setWorks(w)
+        setDrafts(d)
+      })
+      .catch((e) => {
+        if (!cancelled) setLoadError(e instanceof Error ? e.message : String(e))
+      })
+      .finally(() => !cancelled && setLoading(false))
+    return () => {
+      cancelled = true
     }
-  }, [state])
+  }, [userId])
+
+  const requireAuth = () => {
+    if (!userId) throw new Error('Нужно войти в аккаунт, чтобы выполнить это действие.')
+    return userId
+  }
 
   const value = useMemo<StoreValue>(
     () => ({
-      ...state,
-      addDraft: (m) => dispatch({ type: 'ADD_DRAFT', material: m }),
-      deleteDraft: (id) => dispatch({ type: 'DELETE_DRAFT', id }),
-      publish: (m, forkedFrom) => dispatch({ type: 'PUBLISH', material: m, forkedFrom }),
-      toggleLike: (id) => dispatch({ type: 'TOGGLE_LIKE', id }),
-      toggleSave: (id) => dispatch({ type: 'TOGGLE_SAVE', id }),
-      addView: (id) => dispatch({ type: 'ADD_VIEW', id }),
-      addComment: (id, body) => dispatch({ type: 'ADD_COMMENT', id, body }),
-      addContribution: (id, note, addedItems) =>
-        dispatch({ type: 'ADD_CONTRIBUTION', id, note, addedItems }),
-      setOllama: (patch) => dispatch({ type: 'SET_OLLAMA', patch }),
-      reset: () => dispatch({ type: 'RESET' }),
-      getWork: (id) => state.works.find((w) => w.id === id),
+      works,
+      drafts,
+      loading,
+      loadError,
+
+      addDraft: async (m) => {
+        const uid = requireAuth()
+        const { data, error } = await supabase
+          .from('drafts')
+          .insert({ owner_id: uid, material: m })
+          .select('id')
+          .single()
+        if (error) throw new Error(error.message)
+        setDrafts((d) => [{ ...m, id: data.id }, ...d])
+      },
+
+      deleteDraft: async (id) => {
+        requireAuth()
+        const { error } = await supabase.from('drafts').delete().eq('id', id)
+        if (error) throw new Error(error.message)
+        setDrafts((d) => d.filter((x) => x.id !== id))
+      },
+
+      deleteWork: async (id) => {
+        const uid = requireAuth()
+        const { data, error } = await supabase
+          .from('works')
+          .delete()
+          .eq('id', id)
+          .eq('author_id', uid)
+          .select('id')
+        if (error) throw new Error(error.message)
+        if (!data || data.length === 0) throw new Error('Не удалось удалить: это не ваша публикация.')
+        setWorks((ws) => ws.filter((w) => w.id !== id))
+      },
+
+      unpublishWork: async (id) => {
+        const uid = requireAuth()
+        const w = works.find((x) => x.id === id)
+        if (!w || w.author.id !== uid) throw new Error('Можно снять с публикации только свою работу.')
+        const { data: draft, error: dErr } = await supabase
+          .from('drafts')
+          .insert({ owner_id: uid, material: w.material })
+          .select('id')
+          .single()
+        if (dErr) throw new Error(dErr.message)
+        const { data, error } = await supabase
+          .from('works')
+          .delete()
+          .eq('id', id)
+          .eq('author_id', uid)
+          .select('id')
+        if (error || !data || data.length === 0) {
+          // публикацию удалить не вышло — откатываем созданный черновик, чтобы не плодить дубликаты
+          await supabase.from('drafts').delete().eq('id', draft.id)
+          throw new Error(error?.message ?? 'Не удалось снять с публикации.')
+        }
+        setWorks((ws) => ws.filter((x) => x.id !== id))
+        setDrafts((d) => [{ ...w.material, id: draft.id }, ...d])
+      },
+
+      publish: async (m, forkedFrom) => {
+        const uid = requireAuth()
+        const { error } = await supabase.from('works').insert({
+          author_id: uid,
+          material: m,
+          forked_from_id: forkedFrom?.id,
+          forked_from_title: forkedFrom?.material.title,
+          forked_from_author: forkedFrom?.author.name,
+        })
+        if (error) throw new Error(error.message)
+        // Материал, ставший публикацией, больше не черновик (если он им был).
+        setDrafts((d) => d.filter((x) => x.id !== m.id))
+        await refreshWorks()
+      },
+
+      toggleLike: async (id) => {
+        const uid = requireAuth()
+        const w = works.find((x) => x.id === id)
+        if (!w) return
+        setWorks((ws) =>
+          ws.map((x) =>
+            x.id === id ? { ...x, likedByMe: !x.likedByMe, likes: x.likes + (x.likedByMe ? -1 : 1) } : x,
+          ),
+        )
+        if (w.likedByMe) {
+          await supabase.from('likes').delete().eq('work_id', id).eq('user_id', uid)
+        } else {
+          await supabase.from('likes').insert({ work_id: id, user_id: uid })
+        }
+      },
+
+      toggleSave: async (id) => {
+        const uid = requireAuth()
+        const w = works.find((x) => x.id === id)
+        if (!w) return
+        setWorks((ws) => ws.map((x) => (x.id === id ? { ...x, savedByMe: !x.savedByMe } : x)))
+        if (w.savedByMe) {
+          await supabase.from('saves').delete().eq('work_id', id).eq('user_id', uid)
+        } else {
+          await supabase.from('saves').insert({ work_id: id, user_id: uid })
+        }
+      },
+
+      addView: async (id) => {
+        setWorks((ws) => ws.map((x) => (x.id === id ? { ...x, views: x.views + 1 } : x)))
+        await supabase.rpc('increment_work_views', { work_id: id })
+      },
+
+      addComment: async (id, body) => {
+        const uid = requireAuth()
+        const { data, error } = await supabase
+          .from('comments')
+          .insert({ work_id: id, author_id: uid, body })
+          .select('id, created_at')
+          .single()
+        if (error) throw new Error(error.message)
+        const comment: Comment = { id: data.id, author: profile ?? toUserRef(null), body, createdAt: Date.parse(data.created_at) }
+        setWorks((ws) => ws.map((x) => (x.id === id ? { ...x, comments: [...x.comments, comment] } : x)))
+      },
+
+      addContribution: async (id, note, addedItems) => {
+        const uid = requireAuth()
+        const { data, error } = await supabase
+          .from('contributions')
+          .insert({ work_id: id, author_id: uid, note, added_items: addedItems })
+          .select('id, created_at')
+          .single()
+        if (error) throw new Error(error.message)
+        const contribution: Contribution = {
+          id: data.id,
+          author: profile ?? toUserRef(null),
+          note,
+          addedItems,
+          status: 'pending',
+          createdAt: Date.parse(data.created_at),
+        }
+        setWorks((ws) =>
+          ws.map((x) => (x.id === id ? { ...x, contributions: [...x.contributions, contribution] } : x)),
+        )
+      },
+
+      getWork: (id) => works.find((w) => w.id === id),
     }),
-    [state],
+    [works, drafts, loading, loadError, profile, refreshWorks],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

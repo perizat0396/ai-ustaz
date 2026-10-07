@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Work } from '@/types'
 import { classForType, cx, timeAgo } from '@/lib/utils'
 import { useStore } from '@/lib/store'
+import { useAuth } from '@/lib/auth'
 import { useI18n } from '@/lib/i18n'
 import { Avatar, Badge } from './ui'
 import { TypeIcon } from './TypeIcon'
@@ -9,8 +10,18 @@ import { IconBookmark, IconComment, IconFork, IconHeart } from './Icon'
 
 export function WorkCard({ work }: { work: Work }) {
   const { toggleLike, toggleSave } = useStore()
-  const { t, lang, tType, tInst, tGrade, tSubject } = useI18n()
+  const { session } = useAuth()
+  const navigate = useNavigate()
+  const { t, lang, tType, tInst, tGrade, tSubject, tTitle, tSummary } = useI18n()
   const m = work.material
+
+  const guarded = (fn: () => void) => {
+    if (!session) {
+      navigate('/login')
+      return
+    }
+    fn()
+  }
 
   const c = m.content
   const count =
@@ -20,11 +31,19 @@ export function WorkCard({ work }: { work: Work }) {
         ? t('count.flashcards', { n: c.cards.length })
         : c.kind === 'assignment'
           ? t('count.assignment', { n: c.tasks.length })
-          : c.kind === 'game'
-            ? t('count.game', { n: c.pairs.length })
-            : c.kind === 'lesson'
-              ? t('count.lesson', { n: c.sections.length })
-              : t('count.summary', { n: c.keyPoints.length })
+          : c.kind === 'ordering'
+            ? t('count.assignment', { n: c.steps.length })
+            : c.kind === 'game'
+              ? t('count.game', {
+                  n: c.pairs?.length ?? c.questions?.length ?? c.rounds?.length ?? 0,
+                })
+              : c.kind === 'lesson'
+                ? t('count.lesson', { n: c.sections.length })
+                : c.kind === 'ksp'
+                  ? t('count.ksp', { n: 3 })
+                  : c.kind === 'course'
+                    ? t('count.course', { n: c.steps.length })
+                    : t('count.summary', { n: c.keyPoints.length })
 
   return (
     <article className="card group flex flex-col p-5 transition hover:shadow-md">
@@ -34,7 +53,7 @@ export function WorkCard({ work }: { work: Work }) {
           {tType(m.type)}
         </Badge>
         <button
-          onClick={() => toggleSave(work.id)}
+          onClick={() => guarded(() => void toggleSave(work.id))}
           className={cx(
             'rounded-lg p-1.5 transition',
             work.savedByMe
@@ -49,16 +68,18 @@ export function WorkCard({ work }: { work: Work }) {
 
       <Link to={`/work/${work.id}`} className="flex-1">
         <h3 className="text-base font-bold text-slate-900 group-hover:text-brand-600 dark:text-white dark:group-hover:text-brand-400">
-          {m.title}
+          {tTitle(m)}
         </h3>
-        <p className="mt-1 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{m.summary}</p>
+        <p className="mt-1 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{tSummary(m)}</p>
       </Link>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
-        <Badge>{tSubject(m.subject)}</Badge>
-        <Badge>
-          {tInst(m.institution)} · {tGrade(m.grade)}
-        </Badge>
+        {m.subject && <Badge>{tSubject(m.subject)}</Badge>}
+        {m.grade && (
+          <Badge>
+            {tInst(m.institution)} · {tGrade(m.grade)}
+          </Badge>
+        )}
         <Badge>{count}</Badge>
       </div>
 
@@ -81,7 +102,7 @@ export function WorkCard({ work }: { work: Work }) {
 
         <div className="flex items-center gap-3 text-xs text-slate-400">
           <button
-            onClick={() => toggleLike(work.id)}
+            onClick={() => guarded(() => void toggleLike(work.id))}
             className={cx(
               'flex items-center gap-1 transition',
               work.likedByMe ? 'text-rose-500' : 'hover:text-slate-600',

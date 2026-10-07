@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { ContextSource, GenerationParams, Material } from '@/types'
 import { buildMaterial, type GenProgress } from '@/lib/generator'
-import { generateFlashcards, generateQuiz, pingOllama } from '@/lib/ollama'
+import { generateFlashcards, generateQuiz } from '@/lib/ai'
 import { useStore } from '@/lib/store'
 import { useI18n } from '@/lib/i18n'
 import { SourcePicker } from '@/components/SourcePicker'
@@ -19,19 +19,25 @@ function countItems(m: Material): number {
       return c.cards.length
     case 'assignment':
       return c.tasks.length
+    case 'ordering':
+      return c.steps.length
     case 'game':
-      return c.pairs.length
+      return c.pairs?.length ?? c.questions?.length ?? c.rounds?.length ?? 0
     case 'lesson':
       return c.sections.length
     case 'summary':
       return c.keyPoints.length
+    case 'ksp':
+      return 3
+    case 'course':
+      return c.steps.length
   }
 }
 
 export function Contribute() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  const { getWork, addContribution, publish, ollama } = useStore()
+  const { getWork, addContribution, publish } = useStore()
   const { t, tType, tSubject, tGrade } = useI18n()
   const work = getWork(id)
 
@@ -42,11 +48,6 @@ export function Contribute() {
   const [addition, setAddition] = useState<Material | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
-
-  const [ollamaOk, setOllamaOk] = useState<boolean | null>(null)
-  useEffect(() => {
-    void pingOllama(ollama.baseUrl).then((s) => setOllamaOk(s.ok))
-  }, [ollama.baseUrl])
 
   const baseParams = useMemo<GenerationParams | null>(() => {
     if (!work) return null
@@ -81,19 +82,19 @@ export function Contribute() {
   const runGeneration = async () => {
     setAddition(null)
     setGenError(null)
-    setProgress({ percent: 0, label: t('gen.thinking', { model: ollama.models[baseParams.language] }) })
+    setProgress({ percent: 0, label: t('gen.thinking', { module: tType(baseParams.type).toLowerCase() }) })
     try {
       let res: Material
       if (baseParams.type === 'quiz') {
-        const { questions, model, title } = await generateQuiz(baseParams, sources, ollama)
+        const { questions, title } = await generateQuiz(baseParams, sources)
         res = buildMaterial(baseParams, sources, { kind: 'quiz', questions }, {
-          engine: `Ollama · ${model}`,
+          engine: t('gen.aiEngine'),
           title,
         })
       } else {
-        const { cards, model, title } = await generateFlashcards(baseParams, sources, ollama)
+        const { cards, title } = await generateFlashcards(baseParams, sources)
         res = buildMaterial(baseParams, sources, { kind: 'flashcards', cards }, {
-          engine: `Ollama · ${model}`,
+          engine: t('gen.aiEngine'),
           title,
         })
       }
@@ -142,11 +143,6 @@ export function Contribute() {
           {t('contribute.typeUnsupported')}
         </p>
       )}
-      {supported && ollamaOk === false && (
-        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-          {t('gen.needAi')}
-        </p>
-      )}
 
       {!done && supported && (
         <>
@@ -154,13 +150,7 @@ export function Contribute() {
             <p className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
               {t('contribute.newData')}
             </p>
-            <SourcePicker
-              sources={sources}
-              onChange={setSources}
-              ollama={ollama}
-              ollamaOk={ollamaOk}
-              lang={baseParams.language}
-            />
+            <SourcePicker sources={sources} onChange={setSources} lang={baseParams.language} />
           </div>
 
           <Field label={t('contribute.whatAdding')} hint={t('contribute.whatAddingHint')}>
@@ -184,7 +174,7 @@ export function Contribute() {
             />
           </Field>
 
-          <Button onClick={runGeneration} disabled={!!progress || ollamaOk === false}>
+          <Button onClick={runGeneration} disabled={!!progress}>
             <IconSpark width={15} height={15} /> {t('contribute.genAddition')}
           </Button>
 
@@ -214,7 +204,8 @@ export function Contribute() {
                   disabled={!note.trim()}
                   onClick={() => {
                     addContribution(work.id, note.trim(), countItems(addition))
-                    setDone(true)
+                      .then(() => setDone(true))
+                      .catch((e) => setGenError(e instanceof Error ? e.message : String(e)))
                   }}
                 >
                   <IconFork width={15} height={15} /> {t('contribute.sendToAuthor')}
@@ -223,7 +214,8 @@ export function Contribute() {
                   variant="secondary"
                   onClick={() => {
                     publish(addition, work)
-                    navigate('/community')
+                      .then(() => navigate('/community'))
+                      .catch((e) => setGenError(e instanceof Error ? e.message : String(e)))
                   }}
                 >
                   {t('contribute.publishSeparate')}
@@ -253,7 +245,6 @@ export function Contribute() {
         />
       )}
 
-      <p className="text-xs text-slate-400">{t('contribute.localNote')}</p>
     </div>
   )
 }

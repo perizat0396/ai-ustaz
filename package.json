@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "AI Ustaz — платформа для ИИ-генерации учебных материалов и обмена ими в сообществе (фронтенд, mock-данные)",
+  "description": "AI Ustaz — платформа для ИИ-генерации учебных материалов и обмена ими в сообществе (Supabase + Groq)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -11,6 +11,7 @@
     "lint": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
     "mammoth": "^1.12.2",
     "pdfjs-dist": "^6.3.289",
     "react": "^19.1.0",

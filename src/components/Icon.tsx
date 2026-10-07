@@ -20,6 +20,12 @@ export const IconSpark = (p: IconProps) => (
   </svg>
 )
 
+export const IconChartBar = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 20V10M10 20V4M16 20v-7M4 20h16" />
+  </svg>
+)
+
 export const IconCompass = (p: IconProps) => (
   <svg {...base(p)}>
     <circle cx="12" cy="12" r="9" />
@@ -57,6 +63,14 @@ export const IconEye = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
     <circle cx="12" cy="12" r="3" />
+  </svg>
+)
+
+export const IconEyeOff = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.9 3.9M6.6 6.6C3.6 8.5 2 12 2 12s3.5 7 10 7c1.9 0 3.6-.6 5-1.4" />
+    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    <path d="M3 3l18 18" />
   </svg>
 )
 

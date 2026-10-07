@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useI18n } from '@/lib/i18n'
 import { WorkCard } from '@/components/WorkCard'
+import { ExitSurveyBanner } from '@/components/ExitSurveyCard'
 import { Button, SectionTitle } from '@/components/ui'
 import {
   IconArrowRight,
@@ -52,6 +53,8 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      <ExitSurveyBanner />
 
       {/* How it works */}
       <section>

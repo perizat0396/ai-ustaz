@@ -18,6 +18,8 @@ export function classForType(type: MaterialType): string {
     game: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
     lesson: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
     summary: 'bg-slate-100 text-slate-700 dark:bg-slate-700/40 dark:text-slate-300',
+    ksp: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300',
+    course: 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300',
   }
   return map[type]
 }
@@ -29,6 +31,8 @@ export const TYPE_LABELS: Record<MaterialType, string> = {
   game: 'Игра',
   lesson: 'План урока',
   summary: 'Конспект',
+  ksp: 'КСП',
+  course: 'Курс',
 }
 
 export const TYPE_ICONS: Record<MaterialType, string> = {
@@ -38,6 +42,8 @@ export const TYPE_ICONS: Record<MaterialType, string> = {
   game: '🎮',
   lesson: '📚',
   summary: '📄',
+  ksp: '🗂️',
+  course: '🎓',
 }
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {

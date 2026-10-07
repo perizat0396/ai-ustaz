@@ -17,6 +17,8 @@ const ICON: Record<MaterialType, ComponentType<SVGProps<SVGSVGElement>>> = {
   game: IconPuzzle,
   lesson: IconBookOpen,
   summary: IconDocText,
+  ksp: IconClipboardCheck,
+  course: IconBookOpen,
 }
 
 const TINT: Record<MaterialType, string> = {
@@ -26,6 +28,8 @@ const TINT: Record<MaterialType, string> = {
   game: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300',
   lesson: 'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300',
   summary: 'bg-slate-100 text-slate-500 dark:bg-slate-700/50 dark:text-slate-300',
+  ksp: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300',
+  course: 'bg-teal-100 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300',
 }
 
 /** Голая иконка типа материала (наследует currentColor). */
